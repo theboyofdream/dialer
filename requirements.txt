@@ -1,0 +1,17 @@
+yarn add react-native-paper
+yarn add react-native-safe-area-context
+yarn add react-native-vector-icons
+yarn add react-native-paper
+yarn add react-native-safe-area-context
+yarn add react-native-vector-icons 
+yarn add @react-navigation/native
+yarn add react-native-screens react-native-safe-area-context
+yarn add @react-navigation/native-stack
+yarn add mobx
+yarn add axios
+yarn add react-native-mmkv
+yarn add @notifee/react-native
+yarn add formik 
+yarn add yup 
+yarn add react-native-send-intent
+yarn add @shopify/flash-list

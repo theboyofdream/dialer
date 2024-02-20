@@ -1,0 +1,31 @@
+<>
+  <Input
+    label="Email ID"
+    placeholder='Email ID'
+    keyboardType='email-address'
+    onChangeText={(mail) => {
+      setFieldValue('email', mail.toLowerCase())
+      handleChange('email')
+    }}
+    onBlur={handleBlur('email')}
+    value={values.email.toLowerCase()}
+    errorText={touched.email && errors.email ? errors.email : undefined}
+  />
+
+  <Input
+    label="Password"
+    placeholder='Password'
+    onChangeText={handleChange('password')}
+    onBlur={handleBlur('password')}
+    value={values.password}
+    secureTextEntry={!isPasswordVisible}
+    errorText={touched.password && errors.password ? errors.password : undefined}
+    right={
+      <TextInput.Icon
+        color={touched.password && errors.password ? colors.error : colors.primary}
+        icon={isPasswordVisible ? 'eye' : 'eye-off'}
+        onPress={() => setPasswordVisibility(!isPasswordVisible)}
+      />
+    }
+  />
+</>

@@ -1,79 +1,73 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+## SETUP
 
-# Getting Started
+UI:
+[react native paper](https://callstack.github.io/react-native-paper/docs/guides/getting-started)
+yarn add react-native-paper
+yarn add react-native-safe-area-context
+yarn add react-native-vector-icons 
+- The library has specified dedicated steps for each platform. Please follow their [installation guide](https://github.com/oblador/react-native-vector-icons#installation) in order to properly use icon fonts.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+Navigation:
+[react navigation](https://reactnavigation.org/docs/getting-started/)
+yarn add @react-navigation/native
+yarn add react-native-screens react-native-safe-area-context
+// yarn add @react-navigation/native-stack
 
-## Step 1: Start the Metro Server
+https://reactnavigation.org/docs/stack-navigator
+yarn add @react-navigation/stack
+yarn add react-native-gesture-handler
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+State Management:
+[mobx](https://mobx.js.org/installation.html)
+yarn add mobx
+yarn add mobx-react
+mobx-plugin
+https://github.com/mobxjs/mobx/blob/main/packages/eslint-plugin-mobx/README.md
 
-To start Metro, run the following command from the _root_ of your React Native project:
 
-```bash
-# using npm
-npm start
 
-# OR using Yarn
-yarn start
-```
+[axios](https://axios-http.com/docs/intro)
+yarn add axios
 
-## Step 2: Start your Application
+Local Storage:
+[mmkv](https://github.com/mrousavy/react-native-mmkv)
+yarn add react-native-mmkv
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+Notification:
+yarn add @notifee/react-native [🔗](https://notifee.app/react-native/docs/installation)
 
-### For Android
+Form:
+yarn add formik 
+(https://formik.org/docs/guides/react-native)
+yarn add yup 
+[🔗](https://github.com/jquense/yup)
 
-```bash
-# using npm
-npm run android
+[]
+yarn add react-native-send-intent
 
-# OR using Yarn
-yarn android
-```
 
-### For iOS
+yarn add @shopify/flash-list
 
-```bash
-# using npm
-npm run ios
 
-# OR using Yarn
-yarn ios
-```
+fonts:
+https://fonts.google.com/specimen/Poppins
+https://medium.com/@prathiba2796/how-to-add-and-use-custom-fonts-in-react-native-369d5bba9203
+https://callstack.github.io/react-native-paper/docs/guides/fonts/#installing-custom-fonts
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
 
-## Step 3: Modifying your App
+path alias
+https://javascript.plainenglish.io/react-native-path-aliasing-with-simplify-your-imports-and-enhance-your-codebase-9897efee96a8#:~:text=Setting%20Up%20Path%20Aliasing%20in,Edit%20your%20tsconfig.
+yarn add --dev babel-plugin-module-resolver
+custom path alias => @/*
 
-Now that you have successfully run the app, let's modify it.
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+for audio file / fetching apk from server
+yarn add react-native-fs
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+yarn add react-native-android-intent-launcher
 
-## Congratulations! :tada:
 
-You've successfully run and modified your React Native App. :partying_face:
 
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+https://notifee.app/react-native/docs/android/behaviour#full-screen
+https://notifee.app/react-native/docs/android/appearance#text-styling
