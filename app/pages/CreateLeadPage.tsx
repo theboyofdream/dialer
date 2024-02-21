@@ -1,12 +1,13 @@
-import { IconButton, Text, useTheme } from "react-native-paper";
-import { Button, Dropdown, Input, Row, Screen, Spacer } from "../components";
-import { ScrollView, StyleSheet, View } from "react-native";
 import { Formik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
+import { Button, Dropdown, Input, Screen, Spacer } from "../components";
 
+import { observer } from "mobx-react";
 import * as yup from 'yup';
 import { useStores } from "../stores";
-import { observer } from "mobx-react";
+import { CreateLead } from "../stores/leadStore";
 
 
 const schema = yup.object().shape({
@@ -20,21 +21,21 @@ const schema = yup.object().shape({
   typologyIds: yup.array().of(yup.number()),//.min(1, 'Must select at least one typology')),
   sourceId: yup.number().required("Source name required"),
 });
-const defaultValues = {
+const defaultValues: CreateLead = {
   firstname: '',
   lastname: '',
   email: '',
   mobile: '',
   statusId: 0,
-  dispositionId: 0,
+  // dispositionId: 0,
   projectIds: [] as number[],
-  typologyIds: [] as number[],
+  // typologyIds: [] as number[],
   sourceId: 0,
 }
 
 
 export const CreateLeadPage = observer(() => {
-  const { dispositionStore, statusStore, projectStore, typologyStore, leadSourceStore } = useStores()
+  const { dispositionStore, statusStore, projectStore, typologyStore, leadStore, leadSourceStore } = useStores()
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export const CreateLeadPage = observer(() => {
                   handleChange('email')
                 }}
                 onBlur={handleBlur('email')}
-                value={values.email.toLowerCase()}
+                value={values.email?.toLowerCase()}
                 errorText={touched.email && errors.email ? errors.email : undefined}
               />
 
@@ -104,17 +105,18 @@ export const CreateLeadPage = observer(() => {
                 errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
               />
 
-              <Dropdown
-                data={dispositionStore.dispositionArray}
-                initialValue={[]}
+              {/* <Dropdown
+                data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
+                initialValue={[values.dispositionId]}
                 refresh={dispositionStore.fetch}
+                disabled={values.statusId < 1}
                 placeholder='Disposition'
                 onHide={(v) => {
                   setFieldValue('dispositionId', v[0])
                   handleBlur('dispositionId')
                 }}
                 errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
-              />
+              /> */}
 
               <Dropdown
                 multiSelect
@@ -129,7 +131,7 @@ export const CreateLeadPage = observer(() => {
                 errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
               />
 
-              <Dropdown
+              {/* <Dropdown
                 multiSelect
                 data={typologyStore.typologies}
                 initialValue={[]}
@@ -140,7 +142,7 @@ export const CreateLeadPage = observer(() => {
                   handleBlur('typologyIds')
                 }}
                 errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
-              />
+              /> */}
 
               <Dropdown
                 data={leadSourceStore.leadSources}
@@ -169,6 +171,7 @@ export const CreateLeadPage = observer(() => {
         onSubmit={async (form, { setSubmitting }) => {
           setSubmitting(true);
           // await login(email, password);
+          let { error, message } = await leadStore.createLead(form)
           setSubmitting(false);
         }}
       />

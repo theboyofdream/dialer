@@ -41,10 +41,6 @@ export const LeadListItem = observer(({ leadId }: { leadId: number }) => {
     return names.join(', ')
   }, [lead.projectIds])
 
-  function handleCall() {
-    console.log(lead.mobile)
-  }
-
   return (
     <TouchableRipple
       onPress={() => {

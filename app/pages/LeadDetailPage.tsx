@@ -10,7 +10,7 @@ import { StackNavigatorParams } from "../Navigation";
 import { Button, Dropdown, Input, Screen, Spacer } from "../components";
 import { call } from "../services";
 import { useStores } from "../stores";
-import { LeadHistory } from "../stores/leadStore";
+import { Lead, LeadHistory } from "../stores/leadStore";
 import { dateFns, openWhatsApp } from "../utils";
 
 
@@ -57,339 +57,366 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
     handleBack()
   }
 
-  const lead = leadStore.getLeadById(leadId);
+  const [lead, setLead] = useState<Lead | null>(leadStore.getLeadById(leadId));
+  const [loading, setLoading] = useState(false);
 
   const [historyVisible, setHistoryVisible] = useState(false)
 
-  const dispositionName = useMemo(() => {
-    return dispositionStore.getById(lead.dispositionId)?.name
-  }, [lead.dispositionId])
-
-  const [statusName, statusColor] = useMemo(() => {
-    let status = statusStore.getById(lead.statusId)
-    return [status?.name, status?.color]
-  }, [lead.statusId])
-
-  const projectName = useMemo(() => {
-    let names: string[] = []
-    lead.projectIds.map(id => {
-      let p = projectStore.getById(id)
-      if (p) names.push(p.name);
-    })
-    return names.join(', ')
-  }, [lead.projectIds])
+  const { dispositionName, statusName, statusColor, projectName } = useMemo(() => {
+    let dispositionName = '', statusName = '', statusColor = '', projectName = '';
+    if (lead) {
+      dispositionName = dispositionStore.getById(lead.dispositionId)?.name || ''
+      let status = statusStore.getById(lead.statusId)
+      statusName = status?.name || ''
+      statusColor = status?.color || ''
+      let names: string[] = []
+      lead.projectIds.map(id => {
+        let p = projectStore.getById(id)
+        if (p) names.push(p.name);
+      })
+      projectName = names.join(', ')
+    }
+    return { dispositionName, statusName, statusColor, projectName }
+  }, [lead])
 
   const [open, setOpen] = useState(false);
   const onDismiss = useCallback(() => {
     setOpen(false);
   }, [setOpen]);
 
+  async function fetchData() {
+    setLoading(true)
+    let r = await leadStore.fetchLeadById(leadId)
+    r.data && setLead(r.data)
+    setLoading(false)
+  }
+  useEffect(() => {
+    !lead && fetchData()
+  }, [lead])
+
   return (
     <>
       <Screen>
-        <IconButton icon={"arrow-left"} onPress={handleBack} />
+        <IconButton icon={"arrow-left"} onPress={handleBack} disabled={loading} />
 
-        <View style={styles.formContainer}>
-          <View style={styles.form}>
-            <View style={{
-              flexDirection: 'row',
-              gap: 12,
-            }}
-            >
-              <View style={{ alignItems: 'center', gap: 6 }}>
-                <Avatar.Icon icon={"account"} size={60} color={colors.onPrimary} style={{ backgroundColor: statusColor }} />
-                <Text variant="labelSmall" style={{ opacity: 0.6 }} children={"#" + lead.id} />
-              </View>
-              <View>
-                <Text variant="bodyLarge">{lead.firstname} {lead.lastname}</Text>
-                <Text
-                  variant='labelSmall'
-                  style={{ opacity: 0.6 }}
-                  children={"xxxxxx" + lead.mobile.substring(6)}
-                />
-
-                <Text style={{ opacity: 0.6 }}>
-                  <Text
-                    variant='bodySmall'
-                    children={dispositionName || <DisabledText text="No Disposition" />}
-                  />
-                  <Text
-                    style={{ color: colors.onSurfaceDisabled }}
-                    children={" • "}
-                  />
-                  <Text
-                    variant='bodySmall'
-                    children={projectName || <DisabledText text='No Project' />}
-                  />
-                </Text>
-
-                <Text
-                  children={lead.remarks || <DisabledText text="No Remarks" />}
-                />
-
-                <Text style={{ opacity: 0.6 }}>
-                  <Text
-                    variant='bodySmall'
-                    children={statusName || <DisabledText text="No Status" />}
-                  />
-                  <Text
-                    style={{ color: colors.onSurfaceDisabled }}
-                    children=" • "
-                  />
-                  <Text
-                    variant='bodySmall'
-                    children={lead.followUpDate ? dateFns.toHumanReadleDate(lead.followUpDate) : <DisabledText text='No Follow Up' />}
-                  />
-                </Text>
-              </View>
-            </View>
-            <Formik
-              initialValues={{ ...lead, remarks: "" }}
-              validationSchema={schema}
-              children={({ handleBlur, handleChange, setFieldValue, errors, values, isValid, isSubmitting, dirty, touched }) => (
-                <View style={{ flex: 1 }}>
-                  <ScrollView showsVerticalScrollIndicator={false}>
-
-                    <Input
-                      placeholder='First name'
-                      onChangeText={handleChange('firstname')}
-                      onBlur={handleBlur('firstname')}
-                      value={values.firstname}
-                      errorText={touched.firstname && errors.firstname ? errors.firstname : undefined}
+        {loading &&
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text variant="titleMedium">Loading...</Text>
+          </View>
+        }
+        {!loading && !lead &&
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text variant="titleMedium">No lead found!</Text>
+            <Text variant="bodySmall">with id {leadId}</Text>
+            <Button children="refresh" onPress={fetchData} disabled={loading || lead != null} />
+          </View>
+        }
+        {!loading && lead &&
+          <>
+            <View style={styles.formContainer}>
+              <View style={styles.form}>
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 12,
+                }}
+                >
+                  <View style={{ alignItems: 'center', gap: 6 }}>
+                    <Avatar.Icon icon={"account"} size={60} color={colors.onPrimary} style={{ backgroundColor: statusColor }} />
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }} children={"#" + lead.id} />
+                  </View>
+                  <View>
+                    <Text variant="bodyLarge">{lead.firstname} {lead.lastname}</Text>
+                    <Text
+                      variant='labelSmall'
+                      style={{ opacity: 0.6 }}
+                      children={"xxxxxx" + lead.mobile.substring(6)}
                     />
 
-                    <Input
-                      placeholder='Last name'
-                      onChangeText={handleChange('lastname')}
-                      onBlur={handleBlur('lastname')}
-                      value={values.lastname}
-                      errorText={touched.lastname && errors.lastname ? errors.lastname : undefined}
-                    />
-
-                    {errors.mobile &&
-                      <Input
-                        placeholder='Mobile Number'
-                        onChangeText={handleChange('mobile')}
-                        onBlur={handleBlur('mobile')}
-                        value={values.mobile}
-                        errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
+                    <Text style={{ opacity: 0.6 }}>
+                      <Text
+                        variant='bodySmall'
+                        children={dispositionName || <DisabledText text="No Disposition" />}
                       />
-                    }
+                      <Text
+                        style={{ color: colors.onSurfaceDisabled }}
+                        children={" • "}
+                      />
+                      <Text
+                        variant='bodySmall'
+                        children={projectName || <DisabledText text='No Project' />}
+                      />
+                    </Text>
 
-                    <Input
-                      placeholder='Email ID'
-                      onChangeText={(mail) => {
-                        setFieldValue('email', mail.toLowerCase())
-                        handleChange('email')
-                      }}
-                      onBlur={handleBlur('email')}
-                      value={values.email.toLowerCase()}
-                      errorText={touched.email && errors.email ? errors.email : undefined}
+                    <Text
+                      children={lead.remarks || <DisabledText text="No Remarks" />}
                     />
 
-                    <Input
-                      placeholder='Address'
-                      multiline
-                      numberOfLines={5}
-                      onChangeText={handleChange('address')}
-                      onBlur={handleBlur('address')}
-                      value={values.address}
-                      errorText={touched.address && errors.address ? errors.address : undefined}
-                    />
+                    <Text style={{ opacity: 0.6 }}>
+                      <Text
+                        variant='bodySmall'
+                        children={statusName || <DisabledText text="No Status" />}
+                      />
+                      <Text
+                        style={{ color: colors.onSurfaceDisabled }}
+                        children=" • "
+                      />
+                      <Text
+                        variant='bodySmall'
+                        children={lead.followUpDate ? dateFns.toHumanReadleDate(lead.followUpDate) : <DisabledText text='No Follow Up' />}
+                      />
+                    </Text>
+                  </View>
+                </View>
+                <Formik
+                  initialValues={{ ...lead, remarks: "" }}
+                  validationSchema={schema}
+                  children={({ handleBlur, handleChange, setFieldValue, errors, values, isValid, isSubmitting, dirty, touched }) => (
+                    <View style={{ flex: 1 }}>
+                      <ScrollView showsVerticalScrollIndicator={false}>
 
-                    <Input
-                      placeholder='Location'
-                      onChangeText={handleChange('location')}
-                      onBlur={handleBlur('location')}
-                      value={values.location}
-                      errorText={touched.location && errors.location ? errors.location : undefined}
-                    />
-
-                    <Dropdown
-                      data={statusStore.statusArray}
-                      initialValue={[]}
-                      refresh={statusStore.fetch}
-                      placeholder='State (api pending)'
-                      onHide={(v) => {
-                        setFieldValue('stateId', v[0])
-                        handleBlur('stateId')
-                      }}
-                      errorText={touched.stateId && errors.stateId ? "Invalid value" : undefined}
-                    />
-
-                    <Input
-                      placeholder='City'
-                      onChangeText={handleChange('city')}
-                      onBlur={handleBlur('city')}
-                      value={values.city}
-                      errorText={touched.city && errors.city ? errors.city : undefined}
-                    />
-
-                    <Input
-                      placeholder='Pincode'
-                      onChangeText={handleChange('pincode')}
-                      onBlur={handleBlur('pincode')}
-                      value={values.pincode}
-                      errorText={touched.pincode && errors.pincode ? errors.pincode : undefined}
-                    />
-
-                    <Dropdown
-                      data={statusStore.statusArray}
-                      initialValue={[values.statusId]}
-                      refresh={statusStore.fetch}
-                      placeholder='Status'
-                      onHide={(v) => {
-                        setFieldValue('dispositionId', [])
-                        setFieldValue('statusId', v[0])
-                        handleBlur('statusId')
-                      }}
-                      errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
-                    />
-
-                    <Dropdown
-                      data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
-                      initialValue={[values.dispositionId]}
-                      refresh={dispositionStore.fetch}
-                      disabled={values.statusId < 1}
-                      placeholder='Disposition'
-                      onHide={(v) => {
-                        setFieldValue('dispositionId', v[0])
-                        handleBlur('dispositionId')
-                      }}
-                      errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
-                    />
-
-                    {dispositionStore.getById(values.dispositionId)?.showDatetimePicker === true &&
-                      <>
-                        <DatePickerModal
-                          locale="en"
-                          mode="single"
-                          visible={open}
-                          onDismiss={onDismiss}
-                          date={values.followUpDate}
-                          onConfirm={({ date }) => {
-                            setFieldValue('followUpDate', date)
-                            handleChange('followUpDate')
-                            handleBlur('followUpDate')
-                            setOpen(false)
-                          }}
+                        <Input
+                          placeholder='First name'
+                          onChangeText={handleChange('firstname')}
+                          onBlur={handleBlur('firstname')}
+                          value={values.firstname}
+                          errorText={touched.firstname && errors.firstname ? errors.firstname : undefined}
                         />
 
-                        <Pressable onPress={() => setOpen(true)}>
+                        <Input
+                          placeholder='Last name'
+                          onChangeText={handleChange('lastname')}
+                          onBlur={handleBlur('lastname')}
+                          value={values.lastname}
+                          errorText={touched.lastname && errors.lastname ? errors.lastname : undefined}
+                        />
+
+                        {errors.mobile &&
                           <Input
-                            label="Select Follow-up Date"
-                            value={values.followUpDate ? `${dateFns.toReadable(values.followUpDate, "datetime")}` : ''}
-                            errorText={errors.followUpDate && "Invalid dates"}
-                            editable={false}
-                            right={
-                              <TextInput.Icon
-                                icon={"calendar-month"}
-                                onPress={() => setOpen(true)}
-                              />
-                            }
+                            placeholder='Mobile Number'
+                            onChangeText={handleChange('mobile')}
+                            onBlur={handleBlur('mobile')}
+                            value={values.mobile}
+                            errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
                           />
-                        </Pressable>
-                      </>
-                    }
+                        }
 
-                    <Dropdown
-                      multiSelect
-                      data={projectStore.projectArray}
-                      initialValue={[]}
-                      refresh={projectStore.fetch}
-                      placeholder='Projects'
-                      onHide={(v) => {
-                        setFieldValue('projectIds', v)
-                        handleBlur('projectIds')
-                      }}
-                      errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
-                    />
+                        <Input
+                          placeholder='Email ID'
+                          onChangeText={(mail) => {
+                            setFieldValue('email', mail.toLowerCase())
+                            handleChange('email')
+                          }}
+                          onBlur={handleBlur('email')}
+                          value={values.email.toLowerCase()}
+                          errorText={touched.email && errors.email ? errors.email : undefined}
+                        />
 
-                    <Dropdown
-                      multiSelect
-                      data={typologyStore.typologies}
-                      initialValue={[]}
-                      refresh={typologyStore.fetch}
-                      placeholder='Typology'
-                      onHide={(v) => {
-                        setFieldValue('typologyIds', v)
-                        handleBlur('typologyIds')
-                      }}
-                      errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
-                    />
+                        <Input
+                          placeholder='Address'
+                          multiline
+                          numberOfLines={5}
+                          onChangeText={handleChange('address')}
+                          onBlur={handleBlur('address')}
+                          value={values.address}
+                          errorText={touched.address && errors.address ? errors.address : undefined}
+                        />
 
-                    <Dropdown
-                      data={leadSourceStore.leadSources}
-                      initialValue={[]}
-                      refresh={leadSourceStore.fetch}
-                      placeholder='Lead Source'
-                      onHide={(v) => {
-                        setFieldValue('sourceId', v[0])
-                        handleBlur('sourceId')
-                      }}
-                      errorText={touched.sourceId && errors.sourceId ? "Invalid value" : undefined}
-                    />
+                        <Input
+                          placeholder='Location'
+                          onChangeText={handleChange('location')}
+                          onBlur={handleBlur('location')}
+                          value={values.location}
+                          errorText={touched.location && errors.location ? errors.location : undefined}
+                        />
 
-                    <Input
-                      label="Remarks"
-                      placeholder={lead.remarks}
-                      multiline
-                      numberOfLines={5}
-                      onChangeText={handleChange('remarks')}
-                      onBlur={handleBlur('remarks')}
-                      value={values.remarks}
-                      errorText={touched.remarks && errors.remarks ? errors.remarks : undefined}
-                    />
+                        <Dropdown
+                          data={statusStore.statusArray}
+                          initialValue={[]}
+                          refresh={statusStore.fetch}
+                          placeholder='State (api pending)'
+                          onHide={(v) => {
+                            setFieldValue('stateId', v[0])
+                            handleBlur('stateId')
+                          }}
+                          errorText={touched.stateId && errors.stateId ? "Invalid value" : undefined}
+                        />
 
-                    <Spacer size={12} />
-                    <View style={styles.submitBtn}>
-                      <Button
-                        mode="contained"
-                        children={isSubmitting ? "Saving" : "Save"}
-                        disabled={!(isValid && dirty) || isSubmitting}
-                      />
+                        <Input
+                          placeholder='City'
+                          onChangeText={handleChange('city')}
+                          onBlur={handleBlur('city')}
+                          value={values.city}
+                          errorText={touched.city && errors.city ? errors.city : undefined}
+                        />
+
+                        <Input
+                          placeholder='Pincode'
+                          onChangeText={handleChange('pincode')}
+                          onBlur={handleBlur('pincode')}
+                          value={values.pincode}
+                          errorText={touched.pincode && errors.pincode ? errors.pincode : undefined}
+                        />
+
+                        <Dropdown
+                          data={statusStore.statusArray}
+                          initialValue={[values.statusId]}
+                          refresh={statusStore.fetch}
+                          placeholder='Status'
+                          onHide={(v) => {
+                            setFieldValue('dispositionId', [])
+                            setFieldValue('statusId', v[0])
+                            handleBlur('statusId')
+                          }}
+                          errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
+                        />
+
+                        <Dropdown
+                          data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
+                          initialValue={[values.dispositionId]}
+                          refresh={dispositionStore.fetch}
+                          disabled={values.statusId < 1}
+                          placeholder='Disposition'
+                          onHide={(v) => {
+                            setFieldValue('dispositionId', v[0])
+                            handleBlur('dispositionId')
+                          }}
+                          errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
+                        />
+
+                        {dispositionStore.getById(values.dispositionId)?.showDatetimePicker === true &&
+                          <>
+                            <DatePickerModal
+                              locale="en"
+                              mode="single"
+                              visible={open}
+                              onDismiss={onDismiss}
+                              date={values.followUpDate}
+                              onConfirm={({ date }) => {
+                                setFieldValue('followUpDate', date)
+                                handleChange('followUpDate')
+                                handleBlur('followUpDate')
+                                setOpen(false)
+                              }}
+                            />
+
+                            <Pressable onPress={() => setOpen(true)}>
+                              <Input
+                                label="Select Follow-up Date"
+                                value={values.followUpDate ? `${dateFns.toReadable(values.followUpDate, "datetime")}` : ''}
+                                errorText={errors.followUpDate && "Invalid dates"}
+                                editable={false}
+                                right={
+                                  <TextInput.Icon
+                                    icon={"calendar-month"}
+                                    onPress={() => setOpen(true)}
+                                  />
+                                }
+                              />
+                            </Pressable>
+                          </>
+                        }
+
+                        <Dropdown
+                          multiSelect
+                          data={projectStore.projectArray}
+                          initialValue={[]}
+                          refresh={projectStore.fetch}
+                          placeholder='Projects'
+                          onHide={(v) => {
+                            setFieldValue('projectIds', v)
+                            handleBlur('projectIds')
+                          }}
+                          errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
+                        />
+
+                        <Dropdown
+                          multiSelect
+                          data={typologyStore.typologies}
+                          initialValue={[]}
+                          refresh={typologyStore.fetch}
+                          placeholder='Typology'
+                          onHide={(v) => {
+                            setFieldValue('typologyIds', v)
+                            handleBlur('typologyIds')
+                          }}
+                          errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
+                        />
+
+                        <Dropdown
+                          data={leadSourceStore.leadSources}
+                          initialValue={[]}
+                          refresh={leadSourceStore.fetch}
+                          placeholder='Lead Source'
+                          onHide={(v) => {
+                            setFieldValue('sourceId', v[0])
+                            handleBlur('sourceId')
+                          }}
+                          errorText={touched.sourceId && errors.sourceId ? "Invalid value" : undefined}
+                        />
+
+                        <Input
+                          label="Remarks"
+                          placeholder={lead.remarks}
+                          multiline
+                          numberOfLines={5}
+                          onChangeText={handleChange('remarks')}
+                          onBlur={handleBlur('remarks')}
+                          value={values.remarks}
+                          errorText={touched.remarks && errors.remarks ? errors.remarks : undefined}
+                        />
+
+                        <Spacer size={12} />
+                        <View style={styles.submitBtn}>
+                          <Button
+                            mode="contained"
+                            children={isSubmitting ? "Saving" : "Save"}
+                            disabled={!(isValid && dirty) || isSubmitting}
+                          />
+                        </View>
+
+                        <Spacer size={50} />
+                      </ScrollView>
                     </View>
+                  )}
+                  onSubmit={async (form, { setSubmitting }) => {
+                    setSubmitting(true)
+                    let { error, message } = await leadStore.updateLead(form)
+                    setSubmitting(false)
+                  }}
+                />
+              </View>
+            </View>
 
-                    <Spacer size={50} />
-                  </ScrollView>
-                </View>
-              )}
-              onSubmit={async (form, { setSubmitting }) => {
-                setSubmitting(true)
-                await leadStore.updateLead(form)
-                setSubmitting(false)
-              }}
-            />
-          </View>
-        </View>
+            <View style={{ flexDirection: 'row', alignSelf: 'center', marginBottom: 6, gap: 6 }}>
+              <Button
+                icon="history"
+                children="history"
+                style={{ justifyContent: 'center', alignItems: 'center' }}
+                onPress={() => setHistoryVisible(true)}
+              />
 
-        <View style={{ flexDirection: 'row', alignSelf: 'center', marginBottom: 6, gap: 6 }}>
-          <Button
-            icon="history"
-            children="history"
-            style={{ justifyContent: 'center', alignItems: 'center' }}
-            onPress={() => setHistoryVisible(true)}
-          />
+              <IconButton
+                icon="whatsapp"
+                style={{ aspectRatio: 1, backgroundColor: "#d8f7de" }}
+                iconColor="#3BD759"
+                size={30}
+                onPress={() => openWhatsApp(lead.mobile)}
+              />
+              <IconButton
+                icon="phone"
+                style={{ aspectRatio: 1, backgroundColor: "#cce5ff" }}
+                iconColor="#007FFF"
+                size={30}
+                onPress={() => call(lead.mobile)}
+              />
+            </View>
 
-          <IconButton
-            icon="whatsapp"
-            style={{ aspectRatio: 1, backgroundColor: "#d8f7de" }}
-            iconColor="#3BD759"
-            size={30}
-            onPress={() => openWhatsApp(lead.mobile)}
-          />
-          <IconButton
-            icon="phone"
-            style={{ aspectRatio: 1, backgroundColor: "#cce5ff" }}
-            iconColor="#007FFF"
-            size={30}
-            onPress={() => call(lead.mobile)}
-          />
-        </View>
+          </>
+        }
 
       </Screen>
       <History
-        id={lead.id}
+        id={lead?.id}
         visible={historyVisible}
         setVisibility={setHistoryVisible}
       />
@@ -416,7 +443,7 @@ const styles = StyleSheet.create({
 
 
 
-const History = observer(({ id, visible, setVisibility }: { id: number, visible: boolean, setVisibility: (visible: boolean) => void }) => {
+const History = observer(({ id, visible, setVisibility }: { id: number | undefined, visible: boolean, setVisibility: (visible: boolean) => void }) => {
   const { leadStore: { fetchLeadHistoryById } } = useStores()
   const { colors } = useTheme()
 
@@ -425,11 +452,13 @@ const History = observer(({ id, visible, setVisibility }: { id: number, visible:
   const [history, setHistory] = useState<LeadHistory[]>([])
 
   async function fetchData() {
+    if (!id) return;
     setFetching(true)
     let { data } = await fetchLeadHistoryById(id)
     setHistory(data)
     setFetching(false)
   }
+
   useEffect(() => {
     if (!history || history.length < 1) {
       fetchData()

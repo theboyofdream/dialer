@@ -1,3 +1,4 @@
+
 import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
 import { observable, runInAction } from 'mobx';
@@ -6,7 +7,6 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Chip, ChipProps, Dialog, IconButton, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { DatePickerModal } from 'react-native-paper-dates';
-import * as yup from 'yup';
 import { Button, Dropdown, Input, LeadListItem, Screen, Spacer } from "../components";
 import { Lead, fetchTypes, useStores } from '../stores';
 import { dateFns, delay } from '../utils';
@@ -151,9 +151,28 @@ export const LeadsPage = observer(() => {
           <View style={{ flex: 1 }}>
             <Input
               hideLabel
+              // placeholder={`Search ${globalSearchEnabled ? globalSearchType : 'name/mobile'}`}
               placeholder={`Search name or mobile`}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              // left={
+              //   globalSearchEnabled ?
+              //     <TextInput.Icon
+              //       icon={globalSearchType === 'mobile' ? 'phone' : 'account-circle'}
+              //       color={colors.primary}
+              //       onPress={() => {
+              //         switch (globalSearchType) {
+              //           case 'mobile':
+              //             setGlobalSearchType('name')
+              //             break;
+              //           case 'name':
+              //             setGlobalSearchType('mobile')
+              //             break;
+              //         }
+              //       }}
+              //     />
+              //     : undefined
+              // }
               right={
                 <TextInput.Icon
                   style={{
@@ -172,7 +191,7 @@ export const LeadsPage = observer(() => {
           </View>
         </View>
 
-
+        {/* <View style={{ flexDirection: 'row' }}> */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -186,12 +205,20 @@ export const LeadsPage = observer(() => {
                 children={item}
                 active={activePreFilter === item}
                 activeColor={colors.primary}
+                // disabled={globalSearchEnabled || fetchingData}
                 disabled={onlineSearchState.on || fetchingData}
                 onPress={() => togglePreFilter(item)}
               />
             )
           }
         </ScrollView>
+        {/* <Checkbox
+            status={globalSearchEnabled ? 'checked' : 'unchecked'}
+            label='Global search'
+            onPress={toggleGlobalSearch}
+            disabled={fetchingData}
+          /> */}
+        {/* </View> */}
 
       </View>
 
@@ -395,10 +422,6 @@ const onlineSearchState = observable({
   name: '',
   mobile: ''
 })
-const schema = yup.object().shape({
-  name: yup.string(),
-  mobile: yup.string().matches(/^\d{10}$/, 'Please enter a valid 10-digit mobile number'),
-});
 const OnlineSearch = observer(() => {
   const { leadStore } = useStores()
   return (
@@ -411,7 +434,6 @@ const OnlineSearch = observer(() => {
               name: onlineSearchState.name,
               mobile: onlineSearchState.mobile
             }}
-            validationSchema={schema}
             children={({ values, errors, touched, isValid, isSubmitting, handleBlur, handleChange, handleSubmit, handleReset }) => (
               <View>
                 <Input
@@ -421,7 +443,6 @@ const OnlineSearch = observer(() => {
                   value={values.name}
                   errorText={touched.name && errors.name ? errors.name : undefined}
                 />
-                <Text variant='labelLarge' style={{ textAlign: 'center' }}>OR</Text>
                 <Input
                   placeholder='Mobile Number'
                   onChangeText={handleChange('mobile')}
