@@ -2,16 +2,12 @@ import { Linking, ScrollView, ToastAndroid, View } from "react-native";
 import { Avatar, IconButton, Text, useTheme } from "react-native-paper";
 import { Button, Screen, Spacer } from "../components";
 import { useStores } from "../stores";
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 import { Formik } from "formik";
 import SendIntentAndroid from "react-native-send-intent";
 import Sound from "react-native-sound";
+import { appInfo } from "../stores/config";
 
-const appInfo = {
-  version: "1.0",
-  'react native': '0.71',
-  hermes: 'enabled',
-}
 
 export const ProfilePage = observer(() => {
   const { authStore: { user, logout }, appInfoStore: { checkForUpdate, updateAvailable } } = useStores();
@@ -122,7 +118,7 @@ export const ProfilePage = observer(() => {
           onSubmit={async (v, { setSubmitting }) => {
             setSubmitting(true)
             const r = await checkForUpdate()
-            console.log(r)
+            // console.log(r)
             if (!r.updateAvailable) {
               ToastAndroid.show("Already upto date", ToastAndroid.LONG);
             }

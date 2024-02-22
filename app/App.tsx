@@ -16,7 +16,7 @@ configure({
 import notifee, { EventType } from '@notifee/react-native';
 import { useEffect } from 'react';
 import { Navigation } from './Navigation';
-import { AppUpdateAlert } from './components';
+import { AppUpdateAlert, ErrorAlert } from './components';
 import { removeNotification } from './services';
 import { RootStoreProvider, rootStore } from './stores';
 import { theme } from './utils';
@@ -39,13 +39,16 @@ export default function App() {
           break;
       }
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe()
+    };
   }, []);
 
   return (
     <PaperProvider theme={theme}>
       <RootStoreProvider value={rootStore}>
         <AppUpdateAlert />
+        <ErrorAlert />
         <Navigation />
       </RootStoreProvider>
     </PaperProvider>

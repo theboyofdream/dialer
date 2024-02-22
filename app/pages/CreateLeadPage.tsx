@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Button, Dropdown, Input, Screen, Spacer } from "../components";
 
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 import * as yup from 'yup';
 import { useStores } from "../stores";
 import { CreateLead } from "../stores/leadStore";

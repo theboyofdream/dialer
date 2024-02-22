@@ -9,7 +9,7 @@ import { ColorValue, Pressable, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 import { observer } from 'mobx-react-lite';
-import { CreateLeadPage, LeadDetailPage, LeadsPage, LoginPage, NotificationPage, ReportPage } from "./pages";
+import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotificationPage, ReportPage } from "./pages";
 import { ProfilePage } from './pages/ProfilePage';
 import { useStores } from './stores';
 
@@ -18,6 +18,7 @@ const defaultScreenOptions = { headerShown: false }
 
 
 export type StackNavigatorParams = {
+  loading: undefined,
   home: undefined,
   "lead details": { leadId: number },
   notifications: undefined,
@@ -33,6 +34,7 @@ const StackNavigator = observer(() => {
       {
         user.loggedIn ?
           <>
+            <Stack.Screen name='loading' component={LoadingPage} />
             <Stack.Screen name='home' component={BottomTabNavigator} />
             <Stack.Screen name='lead details' component={LeadDetailPage} />
             <Stack.Screen name='notifications' component={NotificationPage} />

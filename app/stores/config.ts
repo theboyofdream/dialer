@@ -7,7 +7,13 @@ export const
 
   baseUri = "https://sahikarma.com/api/dialer/v2",
   timeout = 1000,
-  appVersion = 1.0;
+  appVersion = 1.01,
+
+  appInfo = {
+    appVersion,
+    'react native': 0.71,
+    hermes: 'enabled'
+  };
 
 
 // if (__DEV__) {

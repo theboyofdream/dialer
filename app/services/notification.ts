@@ -6,7 +6,7 @@ import { dateFns } from '../utils';
 type errorCategory = 'battery' | 'notification' | 'alarm' | null
 export async function handleNotificationPermission() {
   let errorCategory: errorCategory = null
-  let errorMessage = undefined
+  let errorMessage: string | null = null
 
   if (
     Platform.OS === 'android' &&
@@ -86,6 +86,9 @@ type notificationParams = {
 
 }
 export async function setNotification(params: notificationParams) {
+  if (params.notificationDate.getTime() < (new Date()).getTime()) {
+    return;
+  }
   // return;
   const datetime = params.notificationDate.getTime()
   const before15mins = datetime - (15 * 60 * 1000)
@@ -121,7 +124,6 @@ export async function setNotification(params: notificationParams) {
       }
     }, notificationTrigger)
   })
-
 }
 
 export async function removeNotification(notificationId: string) {

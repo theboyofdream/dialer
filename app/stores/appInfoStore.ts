@@ -40,7 +40,7 @@ export class AppInfoStore {
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
-  private fetch = async () => {
+  private async fetch() {
     let error = false;
     let message = 'success';
     let apkInfo = parseJson({});
@@ -67,7 +67,7 @@ export class AppInfoStore {
     return { error, message, data: apkInfo }
   }
 
-  checkForUpdate = async () => {
+  async checkForUpdate() {
     const { error, message, data } = await this.fetch()
     return {
       error,
@@ -77,7 +77,7 @@ export class AppInfoStore {
     }
   }
 
-  private save = (appInfo: AppInfo) => {
+  private save(appInfo: AppInfo) {
     this.appInfo = appInfo;
     this.updateAvailable = appVersion < appInfo.version;
   }

@@ -16,5 +16,6 @@ export * from './ui/Row'
 export * from './ui/Accordion'
 
 export * from './AppUpdateAlert'
+export * from './ErrorAlert'
 
 export * from './LeadListItem'

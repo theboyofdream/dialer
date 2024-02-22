@@ -48,10 +48,10 @@ export const NotificationPage = observer(() => {
 
     await leadStore.fetch({
       type: "leads-with-notification",
-      user: {
-        id: user.userId,
-        franchiseId: user.franchiseId
-      }
+      // user: {
+      //   id: user.userId,
+      //   franchiseId: user.franchiseId
+      // }
     })
 
     await delay(500)

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { ActivityIndicator, Checkbox, Dialog, IconButton, Portal, RadioButton, Text, TextInput, TouchableRipple } from "react-native-paper";
 import { Button, Input, InputProps, Spacer } from "..";
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 
 
 type DropdownProps = InputProps & {

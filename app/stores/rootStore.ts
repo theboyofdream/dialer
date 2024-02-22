@@ -5,6 +5,7 @@ import { LeadSourceStore } from "./dropdowns/leadSourceStore";
 import { ProjectStore } from "./dropdowns/projectStore";
 import { StatusStore } from "./dropdowns/statusStore";
 import { TypologyStore } from "./dropdowns/typologyStore";
+import { ErrorStore } from "./errorStore";
 import { LeadStore } from "./leadStore";
 
 export class RootStore {
@@ -16,6 +17,7 @@ export class RootStore {
   leadSourceStore: LeadSourceStore;
   leadStore: LeadStore;
   appInfoStore: AppInfoStore;
+  errorStore: ErrorStore;
 
   constructor() {
     this.authStore = new AuthStore()
@@ -29,6 +31,8 @@ export class RootStore {
     this.leadStore = new LeadStore(this.authStore);
 
     this.appInfoStore = new AppInfoStore()
+
+    this.errorStore = new ErrorStore()
   }
 }
 

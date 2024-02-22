@@ -9,7 +9,7 @@ import { Formik } from "formik";
 import * as yup from 'yup'
 import { dateFns } from "../utils";
 import { getDispositionWiseCallReport, useStores } from "../stores";
-import { observer } from "mobx-react";
+import { observer } from "mobx-react-lite";
 
 
 type DispositionWiseCalls = {

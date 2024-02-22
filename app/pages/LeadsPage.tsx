@@ -4,7 +4,7 @@ import { observable, runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { Chip, ChipProps, Dialog, IconButton, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Badge, Chip, ChipProps, Dialog, IconButton, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { DatePickerModal } from 'react-native-paper-dates';
 import * as yup from 'yup';
 import { Button, Dropdown, Input, LeadListItem, Screen, Spacer } from "../components";
@@ -136,7 +136,12 @@ export const LeadsPage = observer(() => {
             labelStyle={[onlineSearchState.on && { color: colors.error }]}
             onPress={() => runInAction(() => onlineSearchState.open = true)}
           />
-          <IconButton iconColor={colors.primary} icon={"bell"} onPress={() => navigate('notifications')} />
+          <Button
+            icon='bell'
+            style={{ minWidth: 0, borderRadius: 100, backgroundColor: colors.secondaryContainer }}
+            children={leadStore.notificationsCount}
+            onPress={() => navigate('notifications')}
+          />
         </View>
       </View>
 
@@ -242,7 +247,12 @@ const initialFilterValues = observable({
   statusId: 0,
   dispositionIds: [],
 })
-
+const filterSchema = yup.object().shape({
+  startDate: yup.date().required('Start date is required'),
+  endDate: yup.date().required('End date is required'),
+  statusId: yup.number().min(1, 'Invalid Status selected').required('Status is required'),
+  dispositionIds: yup.array(yup.number()),
+})
 const Filter = observer(({ active, setActive, visible, setVisibility }: { active: boolean, setActive: (active: boolean) => void, visible: boolean, setVisibility: (visible: boolean) => void }) => {
   const { statusStore, dispositionStore, leadStore } = useStores()
   const { colors } = useTheme()
@@ -271,6 +281,7 @@ const Filter = observer(({ active, setActive, visible, setVisibility }: { active
           <Dialog.Content>
             <Formik
               initialValues={initialFilterValues}
+              validationSchema={filterSchema}
               children={({ errors, values, touched, isSubmitting, isValid, dirty, handleBlur, handleSubmit, setFieldValue, handleReset }) => (
                 <View>
                   <DatePickerModal
