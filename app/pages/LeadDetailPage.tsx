@@ -11,7 +11,8 @@ import { Button, Dropdown, Input, Screen, Spacer } from "../components";
 import { call } from "../services";
 import { useStores } from "../stores";
 import { Lead, LeadHistory } from "../stores/leadStore";
-import { dateFns, openWhatsApp } from "../utils";
+import { dateFns, delay, openWhatsApp } from "../utils";
+import { runInAction } from "mobx";
 
 
 function DisabledText({ text }: { text: string }) {
@@ -21,8 +22,8 @@ function DisabledText({ text }: { text: string }) {
 
 
 const schema = yup.object().shape({
-  id: yup.number().required('Lead ID is required'),
-  franchiseId: yup.number().required('Franchise ID is required'),
+  id: yup.number().min(1, 'Lead ID is required').required('Lead ID is required'),
+  franchiseId: yup.number().min(1, 'Franchise ID is required').required('Franchise ID is required'),
   firstname: yup.string().required('Firstname is required'),
   lastname: yup.string().required('Lastname is required'),
   mobile: yup.string().matches(/^\d{10}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
@@ -32,20 +33,21 @@ const schema = yup.object().shape({
   stateId: yup.number(),
   city: yup.string(),
   pincode: yup.string().matches(/^\d{6}$/, 'Please enter a valid 6-digit pincode'),
-  statusId: yup.number().required("Status name is required"),
-  dispositionId: yup.number().required("Disposition name is required"),
+  statusId: yup.number().min(1, "Status name is required").required("Status name is required"),
+  dispositionId: yup.number().min(1, "Disposition name is required").required("Disposition name is required"),
   followUpDate: yup.date(),
-  projectId: yup.array().of(yup.number()).required('Project name is required'),
+  projectIds: yup.array().of(yup.number().min(1, 'Project name is required')).required('Project name is required'),
   typologyIds: yup.array().of(yup.number()),//.min(1, 'Must select at least one typology')),
   remarks: yup.string().required('Remarks is required'),
-  sourceId: yup.number().required("Source name required"),
+  sourceId: yup.number(),//.min(1, 'Source name required').required("Source name required"),
   dateOfVisit: yup.date()
 });
 
 type LeadDetailsPageProps = NativeStackScreenProps<StackNavigatorParams, 'lead details'>;
 export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
-  const { leadStore, dispositionStore, statusStore, projectStore, typologyStore, leadSourceStore } = useStores()
+  const { leadStore, dispositionStore, statusStore, projectStore, typologyStore, leadSourceStore, errorStore } = useStores()
   const { colors } = useTheme()
+
   function handleBack() {
     const { canGoBack, goBack, navigate } = props.navigation;
     canGoBack() ? goBack() : navigate('home')
@@ -122,17 +124,17 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                 >
                   <View style={{ alignItems: 'center', gap: 6 }}>
                     <Avatar.Icon icon={"account"} size={60} color={colors.onPrimary} style={{ backgroundColor: statusColor }} />
-                    <Text variant="labelSmall" style={{ opacity: 0.6 }} children={"#" + lead.id} />
+                    <Text variant="labelSmall" style={{ opacity: 0.6 }} children={"#" + lead.id} selectable />
                   </View>
                   <View>
-                    <Text variant="bodyLarge">{lead.firstname} {lead.lastname}</Text>
+                    <Text variant="bodyLarge" selectable>{lead.firstname} {lead.lastname}</Text>
                     <Text
                       variant='labelSmall'
                       style={{ opacity: 0.6 }}
                       children={"xxxxxx" + lead.mobile.substring(6)}
                     />
 
-                    <Text style={{ opacity: 0.6 }}>
+                    <Text style={{ opacity: 0.6 }} selectable>
                       <Text
                         variant='bodySmall'
                         children={dispositionName || <DisabledText text="No Disposition" />}
@@ -149,9 +151,10 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
 
                     <Text
                       children={lead.remarks || <DisabledText text="No Remarks" />}
+                      selectable
                     />
 
-                    <Text style={{ opacity: 0.6 }}>
+                    <Text style={{ opacity: 0.6 }} selectable>
                       <Text
                         variant='bodySmall'
                         children={statusName || <DisabledText text="No Status" />}
@@ -170,8 +173,12 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                 <Formik
                   initialValues={{ ...lead, remarks: "" }}
                   validationSchema={schema}
-                  children={({ handleBlur, handleChange, setFieldValue, errors, values, isValid, isSubmitting, dirty, touched }) => (
-                    <View style={{ flex: 1 }}>
+                  validateOnMount={true}
+                  // children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting, dirty, touched }) => (
+                  children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting }) => {
+                    console.log({ isValid, errors, values })
+
+                    return (<View style={{ flex: 1 }}>
                       <ScrollView showsVerticalScrollIndicator={false}>
 
                         <Input
@@ -179,7 +186,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('firstname')}
                           onBlur={handleBlur('firstname')}
                           value={values.firstname}
-                          errorText={touched.firstname && errors.firstname ? errors.firstname : undefined}
+                          // errorText={touched.firstname && errors.firstname ? errors.firstname : undefined}
+                          errorText={errors.firstname}
+                          required
                         />
 
                         <Input
@@ -187,7 +196,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('lastname')}
                           onBlur={handleBlur('lastname')}
                           value={values.lastname}
-                          errorText={touched.lastname && errors.lastname ? errors.lastname : undefined}
+                          // errorText={touched.lastname && errors.lastname ? errors.lastname : undefined}
+                          errorText={errors.lastname}
+                          required
                         />
 
                         {errors.mobile &&
@@ -196,7 +207,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             onChangeText={handleChange('mobile')}
                             onBlur={handleBlur('mobile')}
                             value={values.mobile}
-                            errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
+                            // errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
+                            errorText={errors.mobile}
+                            required
                           />
                         }
 
@@ -208,7 +221,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           }}
                           onBlur={handleBlur('email')}
                           value={values.email.toLowerCase()}
-                          errorText={touched.email && errors.email ? errors.email : undefined}
+                          // errorText={touched.email && errors.email ? errors.email : undefined}
+                          errorText={errors.email}
                         />
 
                         <Input
@@ -218,7 +232,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('address')}
                           onBlur={handleBlur('address')}
                           value={values.address}
-                          errorText={touched.address && errors.address ? errors.address : undefined}
+                          // errorText={touched.address && errors.address ? errors.address : undefined}
+                          errorText={errors.address}
                         />
 
                         <Input
@@ -226,7 +241,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('location')}
                           onBlur={handleBlur('location')}
                           value={values.location}
-                          errorText={touched.location && errors.location ? errors.location : undefined}
+                          // errorText={touched.location && errors.location ? errors.location : undefined}
+                          errorText={errors.location}
                         />
 
                         <Dropdown
@@ -238,7 +254,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             setFieldValue('stateId', v[0])
                             handleBlur('stateId')
                           }}
-                          errorText={touched.stateId && errors.stateId ? "Invalid value" : undefined}
+                          // errorText={touched.stateId && errors.stateId ? "Invalid value" : undefined}
+                          errorText={errors.stateId}
                         />
 
                         <Input
@@ -246,7 +263,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('city')}
                           onBlur={handleBlur('city')}
                           value={values.city}
-                          errorText={touched.city && errors.city ? errors.city : undefined}
+                          // errorText={touched.city && errors.city ? errors.city : undefined}
+                          errorText={errors.city}
                         />
 
                         <Input
@@ -254,7 +272,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('pincode')}
                           onBlur={handleBlur('pincode')}
                           value={values.pincode}
-                          errorText={touched.pincode && errors.pincode ? errors.pincode : undefined}
+                          // errorText={touched.pincode && errors.pincode ? errors.pincode : undefined}
+                          errorText={errors.pincode}
                         />
 
                         <Dropdown
@@ -263,11 +282,13 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           refresh={statusStore.fetch}
                           placeholder='Status'
                           onHide={(v) => {
-                            setFieldValue('dispositionId', [])
+                            setFieldValue('dispositionId', 0)
                             setFieldValue('statusId', v[0])
                             handleBlur('statusId')
                           }}
-                          errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
+                          // errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
+                          errorText={errors.statusId}
+                          required
                         />
 
                         <Dropdown
@@ -280,7 +301,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             setFieldValue('dispositionId', v[0])
                             handleBlur('dispositionId')
                           }}
-                          errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
+                          // errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
+                          errorText={errors.dispositionId}
+                          required
                         />
 
                         {dispositionStore.getById(values.dispositionId)?.showDatetimePicker === true &&
@@ -303,7 +326,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                               <Input
                                 label="Select Follow-up Date"
                                 value={values.followUpDate ? `${dateFns.toReadable(values.followUpDate, "datetime")}` : ''}
-                                errorText={errors.followUpDate && "Invalid dates"}
+                                errorText={errors.followUpDate}
                                 editable={false}
                                 right={
                                   <TextInput.Icon
@@ -311,6 +334,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                                     onPress={() => setOpen(true)}
                                   />
                                 }
+                                required
                               />
                             </Pressable>
                           </>
@@ -319,39 +343,44 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                         <Dropdown
                           multiSelect
                           data={projectStore.projectArray}
-                          initialValue={[]}
+                          initialValue={values.projectIds}
                           refresh={projectStore.fetch}
                           placeholder='Projects'
                           onHide={(v) => {
                             setFieldValue('projectIds', v)
                             handleBlur('projectIds')
                           }}
-                          errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
+                          // errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
+                          errorText={errors.projectIds ? "Invalid value" : undefined}
+                          required
                         />
 
                         <Dropdown
                           multiSelect
                           data={typologyStore.typologies}
-                          initialValue={[]}
+                          initialValue={values.typologyIds}
                           refresh={typologyStore.fetch}
                           placeholder='Typology'
                           onHide={(v) => {
                             setFieldValue('typologyIds', v)
                             handleBlur('typologyIds')
                           }}
-                          errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
+                          // errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
+                          errorText={errors.typologyIds ? "Invalid value" : undefined}
                         />
 
                         <Dropdown
                           data={leadSourceStore.leadSources}
-                          initialValue={[]}
+                          initialValue={[values.sourceId]}
                           refresh={leadSourceStore.fetch}
                           placeholder='Lead Source'
                           onHide={(v) => {
                             setFieldValue('sourceId', v[0])
                             handleBlur('sourceId')
                           }}
-                          errorText={touched.sourceId && errors.sourceId ? "Invalid value" : undefined}
+                          // errorText={touched.sourceId && errors.sourceId ? "Invalid value" : undefined}
+                          errorText={errors.sourceId}
+                        // required
                         />
 
                         <Input
@@ -362,7 +391,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('remarks')}
                           onBlur={handleBlur('remarks')}
                           value={values.remarks}
-                          errorText={touched.remarks && errors.remarks ? errors.remarks : undefined}
+                          // errorText={touched.remarks && errors.remarks ? errors.remarks : undefined}
+                          errorText={errors.remarks}
+                          required
                         />
 
                         <Spacer size={12} />
@@ -370,18 +401,35 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           <Button
                             mode="contained"
                             children={isSubmitting ? "Saving" : "Save"}
-                            disabled={!(isValid && dirty) || isSubmitting}
+                            // disabled={!(isValid && dirty) || isSubmitting}
+                            disabled={!isValid || isSubmitting}
+                            onPress={() => handleSubmit()}
                           />
                         </View>
 
                         <Spacer size={50} />
                       </ScrollView>
                     </View>
-                  )}
+                    )
+                  }}
                   onSubmit={async (form, { setSubmitting }) => {
                     setSubmitting(true)
-                    let { error, message } = await leadStore.updateLead(form)
+                    await leadStore.updateLead(form)
+                      .then(({ error, message }) => {
+                        if (error) {
+                          runInAction(() =>
+                            errorStore.add({
+                              id: `update-lead`,
+                              title: `Error - update lead`,
+                              content: `Unable to update lead. Try again.\n\nerror message:\n${message}`
+                            })
+                          )
+                          return
+                        }
+                      })
                     setSubmitting(false)
+                    await delay(500)
+                    handleBack()
                   }}
                 />
               </View>

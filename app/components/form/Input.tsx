@@ -6,18 +6,20 @@ export type InputProps = TextInputProps & {
   label?: string;
   hideLabel?: boolean;
   errorText?: string;
+  required?: boolean;
 };
 
 
 export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => {
   const { colors } = useTheme()
+  const isError = props.required && (errorText != undefined || props.value == undefined || props.value == '')
   const styles = {
     text: [
       { color: colors.onSurface },
-      errorText && { color: colors.error }
+      isError && { color: colors.error }
     ] as TextStyle,
     input: {
-      backgroundColor: errorText ? colors.errorContainer : colors.surfaceVariant,
+      backgroundColor: isError ? colors.errorContainer : colors.surfaceVariant,
       paddingHorizontal: 8,
       height: props.multiline ? undefined : 46,
       marginVertical: 4,
@@ -28,9 +30,17 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
     <View>
       {
         !hideLabel &&
-        <Text style={[styles.text, props.disabled && { opacity: 0.6 }]} >
-          {label ?? props.placeholder}
-        </Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={[styles.text, props.disabled && { opacity: 0.6 }]} >
+            {label ?? props.placeholder}
+          </Text>
+          {props.required &&
+            <Text
+              variant='labelMedium'
+              style={[isError && { color: colors.error }]}
+            >*</Text>
+          }
+        </View>
       }
 
       <TextInput
@@ -40,7 +50,7 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
         underlineStyle={[{ display: 'none' }, props.underlineStyle]}
       />
 
-      {errorText &&
+      {isError && errorText &&
         <Text
           style={{ color: colors.error }}
           children={errorText}
@@ -49,31 +59,3 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
     </View>
   );
 };
-
-
-// import { View } from 'react-native';
-// import { Text, TextInput, TextInputProps, useTheme } from 'react-native-paper';
-
-// export type InputProps = TextInputProps & {
-//   errorText?: string;
-//   // hints?: string[];
-//   // hintStyle?: TextStyle;
-//   // hintsContainerStyle?: ViewStyle;
-// };
-
-// export const Input = ({ mode, multiline, errorText, ...props }: InputProps) => {
-//   const { colors } = useTheme();
-//   return (
-//     <View>
-//       <TextInput {...props} mode='flat' maxLength={multiline ? undefined : 100} error={errorText != undefined} />
-//       {errorText && <Text style={{ color: colors.error }} children={errorText} />}
-//       {/* {props.hints &&
-//         <View style={props.hintsContainerStyle}>
-//           {props.hints.map((hint, index) =>
-//             <Text key={index} style={props.hintStyle}>• {hint}</Text>
-//           )}
-//         </View>
-//       } */}
-//     </View>
-//   );
-// };

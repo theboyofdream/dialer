@@ -37,7 +37,7 @@ export const Dropdown = observer(({ multiSelect, data, refresh, onHide, initialV
       .map(filteredData => filteredData.name);
     return txt.join(', ')
   }, [values, initialValue])
-  function onSelect(id: number) {
+  function select(id: number) {
     let tmpArr = [...values]
     if (multiSelect) {
       let i = tmpArr.indexOf(id)
@@ -94,24 +94,25 @@ export const Dropdown = observer(({ multiSelect, data, refresh, onHide, initialV
             {!refreshing && data.length > 0 &&
               <ScrollView>
                 {data.map(d =>
-                  <TouchableRipple key={d.id} onPress={() => onSelect(d.id)}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      {
-                        multiSelect ?
-                          <Checkbox
-                            status={values.includes(d.id) ? "checked" : "unchecked"}
-                            onPress={() => onSelect(d.id)}
-                          />
-                          :
-                          <RadioButton
-                            status={values.includes(d.id) ? "checked" : "unchecked"}
-                            onPress={() => onSelect(d.id)}
-                            value=""
-                          />
-                      }
-                      <Text>{d.name}</Text>
-                    </View>
-                  </TouchableRipple>
+                  <DropdownItem id={d.id} name={d.name} key={d.id} />
+                  // <TouchableRipple key={d.id} onPress={() => onSelect(d.id)}>
+                  //   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  //     {
+                  //       multiSelect ?
+                  //         <Checkbox
+                  //           status={values.includes(d.id) ? "checked" : "unchecked"}
+                  //           onPress={() => onSelect(d.id)}
+                  //         />
+                  //         :
+                  //         <RadioButton
+                  //           status={values.includes(d.id) ? "checked" : "unchecked"}
+                  //           onPress={() => onSelect(d.id)}
+                  //           value=""
+                  //         />
+                  //     }
+                  //     <Text>{d.name}</Text>
+                  //   </View>
+                  // </TouchableRipple>
                 )}
               </ScrollView>
             }
@@ -144,5 +145,26 @@ export const Dropdown = observer(({ multiSelect, data, refresh, onHide, initialV
       </Pressable>
     </>
   )
+
+  function DropdownItem({ id, name }: { id: number, name: string }) {
+    // console.log('RENDERING - dropdown item', id)
+    const props = {
+      status: values.includes(id) ? 'checked' : 'unchecked' as "checked" | "unchecked",
+      onPress: () => select(id)
+    }
+    return (
+      <TouchableRipple onPress={props.onPress}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {
+            multiSelect ?
+              <Checkbox {...props} />
+              :
+              <RadioButton {...props} value={`${id}`} />
+          }
+          <Text>{name}</Text>
+        </View>
+      </TouchableRipple>
+    )
+  }
 })
 // }

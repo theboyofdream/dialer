@@ -8,6 +8,7 @@ import * as yup from 'yup';
 import { Input, Screen, Spacer, Button } from "../components";
 import { useStores } from '../stores';
 import { observer } from 'mobx-react-lite';
+import { runInAction } from 'mobx';
 
 
 const loginSchema = yup.object().shape({
@@ -29,7 +30,7 @@ if (__DEV__) {
 
 
 export const LoginPage = observer(() => {
-  const { authStore } = useStores()
+  const { authStore, errorStore } = useStores()
   const { colors } = useTheme();
   const [isPasswordVisible, setPasswordVisibility] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -88,6 +89,16 @@ export const LoginPage = observer(() => {
         onSubmit={async ({ email, password }) => {
           setSubmitting(true);
           await authStore.login({ email, password })
+            .then(({ error, message }) => {
+              error &&
+                runInAction(() =>
+                  errorStore.add({
+                    id: `login`,
+                    title: `Error - login`,
+                    content: `Something went wrong during login. Try again.\n\nerror message:\n${message}`
+                  })
+                )
+            })
           setSubmitting(false);
         }}
       />

@@ -5,21 +5,21 @@ import { Input, LeadListItem, Screen, Spacer, View } from "../components";
 import { Lead, useStores } from "../stores";
 import { useCallback, useEffect, useState } from "react";
 import { Button, IconButton, Text, TextInput, useTheme } from "react-native-paper";
-import { ScrollView } from "react-native";
+import { RefreshControl, ScrollView, ToastAndroid } from "react-native";
 import { delay } from "../utils";
 import { useNavigation } from '@react-navigation/native';
+import { clearNotification, handleNotificationPermission, setNotification } from '../services';
 
 
 export const NotificationPage = observer(() => {
   const { canGoBack, goBack, navigate } = useNavigation();
   const { colors } = useTheme()
-  const { leadStore, authStore: { user } } = useStores()
+  const { leadStore, errorStore } = useStores()
 
   const [searchQuery, setSearchQuery] = useState('');
   const searching = searchQuery.length > 0;
 
   const [leads, setLeads] = useState<Lead[]>([])
-  const [upcomingNotificationCount, setUpcomingNotificationCount] = useState(0)
   function search() {
     let arr = [...leadStore.leadsWithNotification]
     if (searching) {
@@ -32,27 +32,58 @@ export const NotificationPage = observer(() => {
   useEffect(function reset() {
     setLeads(leadStore.leadsWithNotification)
   }, [searchQuery.length === 0, leadStore.leadsWithNotification])
+
+  async function handleNotificationsRefresh() {
+    let hasNotificationPermission = false;
+    if (!hasNotificationPermission) {
+      await handleNotificationPermission()
+        .then(({ errorMessage }) => {
+          if (errorMessage) {
+            errorStore.add({
+              id: `notification`,
+              title: `Permission  error`,
+              content: `Notification permission not found.\n\n${errorMessage}\nHence, unable to set notifications.`
+            })
+          } else {
+            hasNotificationPermission = true;
+          }
+        })
+    }
+    hasNotificationPermission && await clearNotification()
+    for (let notification of leadStore.leadsWithNotification) {
+      if (!hasNotificationPermission) { break }
+      if (notification.followUpDate) {
+        setNotification({
+          leadId: notification.id,
+          fullName: notification.firstname + ' ' + notification.lastname,
+          remarks: notification.remarks,
+          notificationDate: notification.followUpDate
+        })
+      }
+    }
+    hasNotificationPermission &&
+      ToastAndroid.show(`${leadStore.upcomingNotificationCount} notifications set`, ToastAndroid.SHORT)
+
+  }
   useEffect(() => {
-    let count = 0
-    leads.map(i => {
-      i.followUpDate &&
-        i.followUpDate.getTime() > new Date().getTime() &&
-        count++
-    })
-    setUpcomingNotificationCount(count)
-  }, [leads])
+    if (leadStore.leadsWithNotification.length > 0) {
+      handleNotificationsRefresh()
+    }
+  }, [leadStore.leadsWithNotification])
 
   const [fetchingData, setFetchingData] = useState(false)
   async function fetchData() {
     setFetchingData(true)
 
-    await leadStore.fetch({
-      type: "leads-with-notification",
-      // user: {
-      //   id: user.userId,
-      //   franchiseId: user.franchiseId
-      // }
-    })
+    await leadStore.fetch({ type: "leads-with-notification" })
+      .then(({ error, message }) =>
+        error &&
+        errorStore.add({
+          id: 'notification-fetchData',
+          title: `Error`,
+          content: `Some error occurred while loading notifications.\n\nerror message:${message}`
+        })
+      )
 
     await delay(500)
     setFetchingData(false)
@@ -78,7 +109,7 @@ export const NotificationPage = observer(() => {
       <View style={{ marginHorizontal: 6 }}>
         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
           <View style={{ flexDirection: 'row' }}>
-            <Text variant='titleSmall'>{upcomingNotificationCount}</Text>
+            <Text variant='titleSmall'>{leadStore.upcomingNotificationCount}</Text>
             <Text style={{ color: colors.onSurfaceDisabled }}> Upcoming Notifications</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
@@ -122,7 +153,14 @@ export const NotificationPage = observer(() => {
       {
         !fetchingData && leadStore.filteredLeads.length > 0 &&
         <View style={{ flex: 1 }}>
-          <ScrollView>
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={fetchingData}
+                onRefresh={fetchData}
+              />
+            }
+          >
             {
               leads.map(lead => <LeadListItem key={lead.id} leadId={lead.id} />)
             }

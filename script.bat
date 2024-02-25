@@ -1,8 +1,10 @@
 @echo off
 
 if "%~1"=="save" (
+  set date = date /t
+  set time = time /t
   git add .
-  git commit -m "bot: auto saving today's the progress."
+  git commit -m "bot: auto saving today's the progress. date- %date%, time-%time%"
   git push --all
 )
 

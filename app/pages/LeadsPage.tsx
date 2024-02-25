@@ -1,10 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
-import { observable, runInAction } from 'mobx';
+import { observable, runInAction, set } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
-import { Badge, Chip, ChipProps, Dialog, IconButton, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { Badge, Chip, ChipProps, Dialog, IconButton, Portal, RadioButton, Text, TextInput, TouchableRipple, useTheme } from "react-native-paper";
 import { DatePickerModal } from 'react-native-paper-dates';
 import * as yup from 'yup';
 import { Button, Dropdown, Input, LeadListItem, Screen, Spacer } from "../components";
@@ -36,15 +36,6 @@ function PreDefinedFilterChip({ active, activeColor, ...props }: { active: boole
 }
 
 
-// const state = observable({
-//   isFilterOn: false,
-//   isFilterDialogVisible: false,
-//   activeFilterChip: 'follow-ups' as typeof PreDefinedFilters[number] | null,
-//   searchQuery: '',
-//   isGlobaleSearchOn: false
-// })
-
-
 export const LeadsPage = observer(() => {
   const { colors } = useTheme()
   const { navigate } = useNavigation()
@@ -58,29 +49,12 @@ export const LeadsPage = observer(() => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const searching = searchQuery.length > 0;
-  // const [globalSearchEnabled, setGobalSearch] = useState(false);
-  // const [globalSearchType, setGlobalSearchType] = useState<'mobile' | 'name'>('mobile')
-  // function toggleGlobalSearch() { setGobalSearch(!globalSearchEnabled) }
-  // useEffect(function () {
-  //   setActivePreFilter(globalSearchEnabled ? null : 'follow-ups')
-  // }, [globalSearchEnabled])
 
   async function search() {
     let arr = [...leadStore.filteredLeads]
     if (searching) {
       arr = arr.filter(i => JSON.stringify(Object.values(i)).includes(searchQuery))
     }
-    // if (searching && !globalSearchEnabled) {
-    //   arr = arr.filter(i => JSON.stringify(Object.values(i)).includes(searchQuery))
-    // }
-    // if (searching && globalSearchEnabled) {
-    //   setFetchingData(true)
-    //   let name = globalSearchType === 'name' ? searchQuery : ''
-    //   let mobile = globalSearchType === 'mobile' ? searchQuery : ''
-    //   await leadStore.searchLeads(name, mobile)
-    //   await delay(500)
-    //   setFetchingData(false)
-    // }
     setLeads(arr)
   }
   useEffect(function reset() {
@@ -138,8 +112,12 @@ export const LeadsPage = observer(() => {
           />
           <Button
             icon='bell'
-            style={{ minWidth: 0, borderRadius: 100, backgroundColor: colors.secondaryContainer }}
-            children={leadStore.notificationsCount}
+            style={[
+              { minWidth: 0, borderRadius: 100 },
+              leadStore.upcomingNotificationCount > 0 && { backgroundColor: colors.errorContainer }
+            ]}
+            labelStyle={[leadStore.upcomingNotificationCount > 0 && { color: colors.error }]}
+            children={leadStore.upcomingNotificationCount}
             onPress={() => navigate('notifications')}
           />
         </View>
@@ -191,7 +169,7 @@ export const LeadsPage = observer(() => {
                 children={item}
                 active={activePreFilter === item}
                 activeColor={colors.primary}
-                disabled={onlineSearchState.on || fetchingData}
+                disabled={onlineSearchState.on || fetchingData || isFilterOn}
                 onPress={() => togglePreFilter(item)}
               />
             )
@@ -217,6 +195,7 @@ export const LeadsPage = observer(() => {
         !fetchingData && leadStore.filteredLeads.length > 0 &&
         <View style={{ flex: 1 }}>
           <ScrollView
+            refreshControl={<RefreshControl refreshing={fetchingData} onRefresh={fetchData} />}
           // showsVerticalScrollIndicator={false}
           >
             {
@@ -234,6 +213,7 @@ export const LeadsPage = observer(() => {
         setActive={setFilterState}
         visible={filterDialogVisible}
         setVisibility={setFilterDialogVisibility}
+        disabled={fetchingData}
       />
       <OnlineSearch />
     </Screen>
@@ -250,11 +230,11 @@ const initialFilterValues = observable({
 const filterSchema = yup.object().shape({
   startDate: yup.date().required('Start date is required'),
   endDate: yup.date().required('End date is required'),
-  statusId: yup.number().min(1, 'Invalid Status selected').required('Status is required'),
-  dispositionIds: yup.array(yup.number()),
+  statusId: yup.number().min(1, 'Select status').required('Status is required'),
+  dispositionIds: yup.array(yup.number()).min(1, 'Select atleast one disposition').required('Disposition is required'),
 })
-const Filter = observer(({ active, setActive, visible, setVisibility }: { active: boolean, setActive: (active: boolean) => void, visible: boolean, setVisibility: (visible: boolean) => void }) => {
-  const { statusStore, dispositionStore, leadStore } = useStores()
+const Filter = observer(({ active, setActive, visible, setVisibility, disabled }: { active: boolean, setActive: (active: boolean) => void, visible: boolean, setVisibility: (visible: boolean) => void, disabled: boolean }) => {
+  const { statusStore, dispositionStore, leadStore, errorStore } = useStores()
   const { colors } = useTheme()
   const showDialog = () => setVisibility(true)
   const hideDialog = () => setVisibility(false)
@@ -274,6 +254,7 @@ const Filter = observer(({ active, setActive, visible, setVisibility }: { active
         icon={active ? "filter-remove" : "filter"}
         children={active ? "clear" : "filter"}
         onPress={showDialog}
+        disabled={disabled}
       />
       <Portal>
         <Dialog visible={visible} onDismiss={hideDialog}>
@@ -327,7 +308,7 @@ const Filter = observer(({ active, setActive, visible, setVisibility }: { active
                       setFieldValue('statusId', v[0])
                       handleBlur('statusId')
                     }}
-                    errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
+                    errorText={touched.statusId && errors.statusId ? errors.statusId : undefined}
                   />
 
                   <Dropdown
@@ -341,7 +322,7 @@ const Filter = observer(({ active, setActive, visible, setVisibility }: { active
                       setFieldValue('dispositionIds', v)
                       handleBlur('dispositionIds')
                     }}
-                    errorText={touched.dispositionIds && errors.dispositionIds ? "Invalid value" : undefined}
+                    errorText={touched.dispositionIds && errors.dispositionIds ? `${errors.dispositionIds}` : undefined}
                   />
 
                   <Spacer size={12} />
@@ -371,14 +352,24 @@ const Filter = observer(({ active, setActive, visible, setVisibility }: { active
                 initialFilterValues.startDate = startDate
                 initialFilterValues.endDate = endDate
 
-                let req = await leadStore.applyFilters({
+                await leadStore.applyFilters({
                   fromDate: startDate,
                   toDate: endDate,
                   statusId,
                   dispositionIds
                 })
+                  .then(({ error, message }) => {
+                    error &&
+                      runInAction(() =>
+                        errorStore.add({
+                          id: `apply-filter`,
+                          title: `Error`,
+                          content: `Error occurred while aplying filters. Try again.\n\nerror message:\n${message}`
+                        })
+                      )
+                    setActive(!error)
+                  })
 
-                setActive(true)
                 setSubmitting(false)
                 setTimeout(hideDialog, 500)
               }}
@@ -410,8 +401,10 @@ const schema = yup.object().shape({
   name: yup.string(),
   mobile: yup.string().matches(/^\d{10}$/, 'Please enter a valid 10-digit mobile number'),
 });
+
 const OnlineSearch = observer(() => {
-  const { leadStore } = useStores()
+  const { leadStore, errorStore } = useStores()
+  const [radioBtnValue, setRadioBtnValue] = useState<'name' | 'mobile'>('name')
   return (
     <Portal>
       <Dialog visible={onlineSearchState.open} onDismiss={() => runInAction(() => onlineSearchState.open = false)}>
@@ -425,21 +418,42 @@ const OnlineSearch = observer(() => {
             validationSchema={schema}
             children={({ values, errors, touched, isValid, isSubmitting, handleBlur, handleChange, handleSubmit, handleReset }) => (
               <View>
-                <Input
-                  placeholder='Name'
-                  onChangeText={handleChange('name')}
-                  onBlur={handleBlur('firstname')}
-                  value={values.name}
-                  errorText={touched.name && errors.name ? errors.name : undefined}
-                />
-                <Text variant='labelLarge' style={{ textAlign: 'center' }}>OR</Text>
-                <Input
-                  placeholder='Mobile Number'
-                  onChangeText={handleChange('mobile')}
-                  onBlur={handleBlur('mobile')}
-                  value={values.mobile}
-                  errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
-                />
+                <View style={{ flexDirection: 'row' }}>
+                  {
+                    (Array('name', 'mobile') as Array<typeof radioBtnValue>)
+                      .map(i =>
+                        <TouchableRipple key={i} onPress={() => setRadioBtnValue(i)}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 6 }}>
+                            <RadioButton.Android value={i} status={radioBtnValue === i ? 'checked' : 'unchecked'} onPress={() => setRadioBtnValue(i)} />
+                            <Text style={{ textTransform: 'capitalize' }}>{i}</Text>
+                          </View>
+                        </TouchableRipple>
+                      )
+                  }
+                </View>
+
+                <Spacer size={12} />
+
+                {
+                  radioBtnValue === 'name' &&
+                  <Input
+                    placeholder='Name'
+                    onChangeText={handleChange('name')}
+                    onBlur={handleBlur('firstname')}
+                    value={values.name}
+                    errorText={touched.name && errors.name ? errors.name : undefined}
+                  />
+                }
+                {
+                  radioBtnValue === 'mobile' &&
+                  <Input
+                    placeholder='Mobile Number'
+                    onChangeText={handleChange('mobile')}
+                    onBlur={handleBlur('mobile')}
+                    value={values.mobile}
+                    errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
+                  />
+                }
                 <Spacer size={12} />
 
                 <View style={{
@@ -462,11 +476,19 @@ const OnlineSearch = observer(() => {
             onSubmit={async ({ name, mobile }, { setSubmitting }) => {
               setSubmitting(true)
               await leadStore.searchLeads(name, mobile)
-              runInAction(() => {
-                onlineSearchState.on = true
-                onlineSearchState.name = name
-                onlineSearchState.mobile = mobile
-              })
+                .then(({ error, message }) => {
+                  error &&
+                    runInAction(() => {
+                      errorStore.add({
+                        id: `search-lead`,
+                        title: `Error`,
+                        content: `Unable to find lead. Try again.\n\nerror message:\n${message}`
+                      })
+                      onlineSearchState.on = true
+                      onlineSearchState.name = name
+                      onlineSearchState.mobile = mobile
+                    })
+                })
               setSubmitting(false)
             }}
             onReset={() => {

@@ -11,6 +11,7 @@ import { makeAutoObservable, runInAction } from "mobx";
 import { dateFns } from "../utils";
 import { baseUri, timeout } from './config';
 import { ApiResponse, JsonResponse } from "./store";
+import { ToastAndroid } from 'react-native';
 
 
 export type Lead = {
@@ -60,6 +61,8 @@ function parseJson(jsonArray: JsonResponse[]) {
   let arrayOfLeads: Lead[] = []
   let leads: { [key: number]: Lead } = {}
   jsonArray.map(json => {
+    let projectIdsStr = json['fk_project_id'].trim().split(',') || []
+    const projectIds = projectIdsStr.map(i => parseInt(i))
     const lead = {
       id: parseInt(json['pk_lead_id']),
       franchiseId: parseInt(json['fk_franchise_id']) || 0,
@@ -74,7 +77,7 @@ function parseJson(jsonArray: JsonResponse[]) {
       stateId: json['lead_state'] || '',
       address: json['lead_address'] || '',
       statusId: parseInt(json['lead_type']) || 0,
-      projectIds: (json['fk_project_id'].trim().split(',') || []) as unknown as number[],
+      projectIds,
       dispositionId: parseInt(json['fk_disposition_id']) || 0,
       sourceId: parseInt(json['fk_source_id']) || 0,
       typologyIds: [],
@@ -200,13 +203,14 @@ const Urls = {
 
 export type fetchTypes = { type: "follow-ups" | "interested-leads" | "fresh-leads" | "leads-with-notification" }
 export class LeadStore {
+  private authStore: AuthStore;
   private leadsArray: Lead[] = []
   private leadsObject: { [key: number]: Lead } = {}
   filteredLeads: typeof this.leadsArray = []
   leadsCount: number = 0
   leadsWithNotification: typeof this.leadsArray = []
   notificationsCount: number = 0
-  private authStore: AuthStore;
+  upcomingNotificationCount = 0
 
   constructor(authStore: AuthStore) {
     this.authStore = authStore;
@@ -258,6 +262,13 @@ export class LeadStore {
         this.leadsWithNotification = leadsArray
         this.leadsObject = { ...this.leadsObject, ...leadsObject };
         this.notificationsCount = count
+        count = 0;
+        leadsArray.map(l =>
+          l.followUpDate &&
+          l.followUpDate.getTime() > (new Date()).getTime() &&
+          count++
+        )
+        this.upcomingNotificationCount = count
       }
     })
 
@@ -472,6 +483,7 @@ export class LeadStore {
       })
 
     if (!error) {
+      ToastAndroid.show('Lead updated successfully', ToastAndroid.SHORT)
       this.removeLeadFromStore(params.id)
     }
 
@@ -485,12 +497,13 @@ export class LeadStore {
   }
 
   private removeLeadFromStore(id: number) {
-    let index = this.leadsArray.findIndex(l => l.id === id)
-    if (index) {
-      this.leadsArray.splice(index, 1)
-      if (this.leadsObject[id]) {
-        delete this.leadsObject[id]
-      }
+    // console.log(id)
+    if (this.leadsObject[id]) {
+      // console.log(this.leadsObject[id])
+      delete this.leadsObject[id]
+      // let index = this.leadsArray.findIndex(l => l.id == id)
+      // index && this.leadsArray.splice(index, 1)
+      // console.log(index)
     }
   }
 }

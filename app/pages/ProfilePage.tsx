@@ -1,17 +1,31 @@
 import { Linking, ScrollView, ToastAndroid, View } from "react-native";
-import { Avatar, IconButton, Text, useTheme } from "react-native-paper";
+import { Avatar, Dialog, IconButton, List, Portal, RadioButton, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { Button, Screen, Spacer } from "../components";
 import { useStores } from "../stores";
 import { observer } from "mobx-react-lite";
 import { Formik } from "formik";
 import SendIntentAndroid from "react-native-send-intent";
-import Sound from "react-native-sound";
 import { appInfo } from "../stores/config";
+import { useEffect, useMemo, useState } from "react";
+import { getNotificationSounds, setNotificationSound } from "../services";
+import { Sound, playSampleSound } from "react-native-notification-sounds";
 
 
 export const ProfilePage = observer(() => {
   const { authStore: { user, logout }, appInfoStore: { checkForUpdate, updateAvailable } } = useStores();
   const { colors } = useTheme();
+
+  const [notificationData, setNotificationData] = useState<{
+    current: Sound;
+    list: Sound[];
+  }>()
+  const [selectedNotificationSound, setSelectedNotificationSound] = useState<Sound>()
+  const [notificationDialogVisible, setNotificationDialogVisibile] = useState(false)
+
+  useEffect(() => {
+    getNotificationSounds()
+      .then(setNotificationData)
+  }, [])
 
   return (
     <Screen>
@@ -51,20 +65,70 @@ export const ProfilePage = observer(() => {
             alignItems: 'center',
             paddingRight: 12
           }}>
-            <IconButton icon={"play"} mode="contained" />
+            <IconButton icon={"play"} mode="contained" onPress={() => {
+              notificationData &&
+                playSampleSound(notificationData.current)
+            }} />
             <View style={{ flex: 1 }}>
-              <Text>File name</Text>
-              <Text style={{ color: colors.onSurfaceDisabled }}>path</Text>
+              <Text>{notificationData?.current.title}</Text>
+              <Text style={{ color: colors.onSurfaceDisabled }}>
+                {notificationData?.current.url}
+              </Text>
             </View>
             <Button
               compact
               onPress={() => {
-
+                setNotificationDialogVisibile(true)
               }}
-              children="choose file"
+              children="choose"
             />
           </View>
         </View>
+
+        <Portal>
+          <Dialog visible={notificationDialogVisible} dismissable={false}>
+            <Dialog.Title>Select Notification Sound</Dialog.Title>
+            <Dialog.Content>
+              <Dialog.ScrollArea style={{ maxHeight: 300 }}>
+                <ScrollView>
+                  {notificationData?.list.map(s =>
+                    <TouchableRipple key={s.soundID} onPress={() => {
+                      playSampleSound(s)
+                      setSelectedNotificationSound(s)
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <RadioButton
+                          status={selectedNotificationSound?.soundID === s.soundID ? 'checked' : 'unchecked'}
+                          value={s.soundID}
+                          onPress={() => {
+                            playSampleSound(s)
+                            setSelectedNotificationSound(s)
+                          }}
+                        />
+                        <Text>{s.title}</Text>
+                      </View>
+                    </TouchableRipple>
+                  )}
+                </ScrollView>
+              </Dialog.ScrollArea>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => {
+                if (selectedNotificationSound) {
+                  setNotificationSound(selectedNotificationSound)
+                  setNotificationDialogVisibile(false)
+                  return
+                }
+                ToastAndroid.show('Unkown error occurred.', ToastAndroid.SHORT)
+              }}
+                mode='contained'
+                disabled={selectedNotificationSound === undefined}
+              >
+                Save
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
 
         <View style={{
           backgroundColor: colors.elevation.level1,

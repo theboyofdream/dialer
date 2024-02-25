@@ -13,33 +13,38 @@ function DisabledText({ text }: { text: string }) {
   return <Text style={{ color: colors.onSurfaceDisabled, fontStyle: 'italic' }} variant="labelSmall">{text}</Text>
 }
 
+function useNames(dispositionId: number = 0, statusId: number = 0, projectIds: number[] = []) {
+  const { dispositionStore, statusStore, projectStore } = useStores()
+  const dispositionName = useMemo(() => dispositionStore.getById(dispositionId)?.name, [dispositionId])
+  const status = useMemo(() => statusStore.getById(statusId), [statusId])
+  const projectNames = useMemo(() => {
+    let names: string[] = []
+    projectIds.map(id => {
+      let p = projectStore.getById(id)
+      if (p) { names.push(p.name); }
+    })
+    return names.join(', ')
+  }, [projectIds])
+
+  return {
+    dispositionName,
+    statusName: status?.name,
+    statusColor: status?.color,
+    projectNames
+  }
+}
+
+
 export const LeadListItem = observer(({ leadId }: { leadId: number }) => {
   const { colors } = useTheme()
   const { navigate } = useNavigation()
-  const { leadStore, dispositionStore, statusStore, projectStore } = useStores()
+  const { leadStore } = useStores()
   const lead = leadStore.getLeadById(leadId)
+  const { dispositionName, statusName, statusColor, projectNames } = useNames(lead?.dispositionId, lead?.statusId, lead?.projectIds)
 
   if (!lead) {
     return <></>
   }
-
-  const dispositionName = useMemo(() => {
-    return dispositionStore.getById(lead.dispositionId)?.name
-  }, [lead.dispositionId])
-
-  const [statusName, statusColor] = useMemo(() => {
-    let status = statusStore.getById(lead.statusId)
-    return [status?.name, status?.color]
-  }, [lead.statusId])
-
-  const projectName = useMemo(() => {
-    let names: string[] = []
-    lead.projectIds.map(id => {
-      let p = projectStore.getById(id)
-      if (p) names.push(p.name);
-    })
-    return names.join(', ')
-  }, [lead.projectIds])
 
   return (
     <TouchableRipple
@@ -72,7 +77,7 @@ export const LeadListItem = observer(({ leadId }: { leadId: number }) => {
               <Text
                 variant='bodySmall'
                 style={{ opacity: 0.6 }}
-                children={projectName || <DisabledText text='No Project' />}
+                children={projectNames || <DisabledText text='No Project' />}
               />
             </View>
 

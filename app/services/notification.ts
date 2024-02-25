@@ -1,7 +1,8 @@
 import notifee, { AndroidCategory, AndroidImportance, AndroidNotificationSetting, AndroidStyle, AuthorizationStatus, TimestampTrigger, TriggerType } from '@notifee/react-native';
 import { BackHandler, Platform } from 'react-native';
-import NotificationSounds from 'react-native-notification-sounds';
+import NotificationSounds, { Sound } from 'react-native-notification-sounds';
 import { dateFns } from '../utils';
+import { localStorage } from '../stores/config';
 
 type errorCategory = 'battery' | 'notification' | 'alarm' | null
 export async function handleNotificationPermission() {
@@ -89,6 +90,8 @@ export async function setNotification(params: notificationParams) {
   if (params.notificationDate.getTime() < (new Date()).getTime()) {
     return;
   }
+
+  const sound = (await getNotificationSounds()).current
   // return;
   const datetime = params.notificationDate.getTime()
   const before15mins = datetime - (15 * 60 * 1000)
@@ -101,6 +104,9 @@ export async function setNotification(params: notificationParams) {
       vibration: true,
       bypassDnd: true,
       importance: AndroidImportance.HIGH,
+
+      sound: sound.title,
+      soundURI: sound.url
     })
 
     const notificationTrigger: TimestampTrigger = {
@@ -110,17 +116,18 @@ export async function setNotification(params: notificationParams) {
     }
 
     await notifee.createTriggerNotification({
-      title: `<b>Follow up</b> of <b>${params.fullName}</b>`,
+      title: `Follow up of <h3>${params.fullName}</h3>`,
       android: {
         channelId: notificationChannel,
         category: AndroidCategory.REMINDER,
         showTimestamp: true,
-        style: { type: AndroidStyle.BIGTEXT, text: `<i><small style="opacity:0.5;">remarks:</small></i> ${params.remarks}<br>Follow up at ${dateFns.toHumanReadleDate(new Date(datetime))}` },
+        style: { type: AndroidStyle.BIGTEXT, text: `<i style="opacity:0.5;">remarks:</i> ${params.remarks}<br><i style="opacity:0.5;">Follow up at</i> ${dateFns.toHumanReadleDate(new Date(datetime))}` },
         autoCancel: false,
         pressAction: { id: 'default' },
         fullScreenAction: {
           id: 'default',
         },
+        sound: sound.title
       }
     }, notificationTrigger)
   })
@@ -132,4 +139,23 @@ export async function removeNotification(notificationId: string) {
 
 export async function clearNotification() {
   await notifee.cancelAllNotifications();
+}
+
+const cnskey = 'current-notification-sound'
+export async function getNotificationSounds() {
+  const soundList = await NotificationSounds.getNotifications('notification');
+  const currentSoundJson = localStorage.getString(cnskey)
+  let currentSound = soundList[0]
+  if (currentSoundJson) {
+    currentSound = JSON.parse(currentSoundJson)
+  }
+
+  return {
+    current: currentSound,
+    list: soundList,
+  }
+}
+
+export function setNotificationSound(sound: Sound) {
+  localStorage.set(cnskey, JSON.stringify(sound))
 }

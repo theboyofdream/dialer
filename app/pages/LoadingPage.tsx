@@ -6,7 +6,7 @@ import { Text } from "react-native-paper";
 import { Screen, Spacer } from "../components";
 import { useStores } from "../stores";
 import { delay } from "../utils";
-import { handleNotificationPermission, setNotification } from "../services";
+import { clearNotification, handleNotificationPermission, setNotification } from "../services";
 
 
 export const LoadingPage = observer(() => {
@@ -19,57 +19,61 @@ export const LoadingPage = observer(() => {
     stores.errorStore.add({
       id: `loading-${key}`,
       title: `Error`,
-      content: `\t\tUnable to load status from server.\n\nerror message:\n${msg}`
+      content: `Unable to load ${key} from server.\n\nerror message:\n${msg}`
     })
   }
 
   async function init() {
     let progressCount = 8
-    const updateProgress = () => setProgress(Math.round(100 / --progressCount));
+    async function updateProgress() {
+      setProgress(Math.round(100 / --progressCount))
+      await delay(100)
+    }
 
     if (stores.statusStore.statusArray.length < 1) {
       await stores.statusStore.fetch()
         .then(({ error, message }) => error && setError('status', message))
     }
-    updateProgress()
+    await updateProgress()
 
     if (stores.dispositionStore.dispositionArray.length < 1) {
       await stores.dispositionStore.fetch()
         .then(({ error, message }) => error && setError('disposition', message))
     }
-    updateProgress()
+    await updateProgress()
 
     if (stores.projectStore.projectArray.length < 1) {
       await stores.projectStore.fetch()
         .then(({ error, message }) => error && setError('project', message))
     }
-    updateProgress()
+    await updateProgress()
 
     await stores.leadStore.fetch({ type: 'follow-ups' })
       .then(({ error, message }) => error && setError('follow-ups', message))
-    updateProgress()
+    await updateProgress()
 
     await stores.leadStore.fetch({ type: 'leads-with-notification' })
       .then(({ error, message }) => error && setError('notification', message))
-    updateProgress()
+    await updateProgress()
 
     await stores.appInfoStore.checkForUpdate()
       .then(({ error, message }) => error && setError('app-update', message))
-    updateProgress()
+    await updateProgress()
 
 
     let hasNotificationPermission = false;
+    if (!hasNotificationPermission) {
+      await handleNotificationPermission()
+        .then(({ errorMessage, errorCategory }) => {
+          if (errorCategory) {
+            setError('notification-permission', errorMessage + `\n\nHence, unable to set notifications.`)
+          } else {
+            hasNotificationPermission = true;
+          }
+        })
+    }
+    hasNotificationPermission && await clearNotification()
     for (let notification of stores.leadStore.leadsWithNotification) {
-      if (!hasNotificationPermission) {
-        await handleNotificationPermission()
-          .then(({ errorMessage }) => {
-            if (errorMessage) {
-              setError('notification-permission', errorMessage + `\n\nHence, unable to set notifications.`)
-            } else {
-              hasNotificationPermission = true;
-            }
-          })
-      }
       if (!hasNotificationPermission) { break }
       if (notification.followUpDate) {
         setNotification({
@@ -80,11 +84,10 @@ export const LoadingPage = observer(() => {
         })
       }
     }
-    if (hasNotificationPermission) {
-      ToastAndroid.show('notifications update', ToastAndroid.SHORT)
-    }
-    updateProgress()
+    hasNotificationPermission &&
+      ToastAndroid.show(`${stores.leadStore.upcomingNotificationCount} notifications set`, ToastAndroid.SHORT)
 
+    await updateProgress()
 
     await delay(500)
     navigate('home')

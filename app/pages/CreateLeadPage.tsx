@@ -8,6 +8,7 @@ import { observer } from "mobx-react-lite";
 import * as yup from 'yup';
 import { useStores } from "../stores";
 import { CreateLead } from "../stores/leadStore";
+import { runInAction } from "mobx";
 
 
 const schema = yup.object().shape({
@@ -35,12 +36,7 @@ const defaultValues: CreateLead = {
 
 
 export const CreateLeadPage = observer(() => {
-  const { dispositionStore, statusStore, projectStore, typologyStore, leadStore, leadSourceStore } = useStores()
-  const { colors } = useTheme();
-
-  useEffect(() => {
-    // fetch()
-  }, [])
+  const { statusStore, errorStore, projectStore, leadStore, leadSourceStore } = useStores()
 
   return (
     <Screen style={[{ padding: 12, paddingBottom: 0 }, styles.screen]}>
@@ -170,8 +166,17 @@ export const CreateLeadPage = observer(() => {
         )}
         onSubmit={async (form, { setSubmitting }) => {
           setSubmitting(true);
-          // await login(email, password);
-          let { error, message } = await leadStore.createLead(form)
+          await leadStore.createLead(form)
+            .then(({ error, message }) => {
+              error &&
+                runInAction(() =>
+                  errorStore.add({
+                    id: `create-lead`,
+                    title: `Error - create lead`,
+                    content: `Something went wrong. Try again.\n\nerror message:\n${message}`
+                  })
+                )
+            })
           setSubmitting(false);
         }}
       />
