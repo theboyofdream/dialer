@@ -6,7 +6,7 @@ export const
   localStorage = new MMKV(),
 
   baseUri = "https://sahikarma.com/api/dialer/v2",
-  timeout = 1000,
+  timeout = 12000,
   appVersion = 1.02,
 
   appInfo = {
@@ -15,6 +15,11 @@ export const
     hermes: 'enabled'
   };
 
+export const axiosInterceptor = axios.create({
+  ...axios.defaults,
+  baseURL: baseUri,
+  timeout: timeout
+})
 
 // if (__DEV__) {
 //   localStorage.clearAll()

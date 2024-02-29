@@ -71,3 +71,19 @@ yarn add react-native-android-intent-launcher
 
 https://notifee.app/react-native/docs/android/behaviour#full-screen
 https://notifee.app/react-native/docs/android/appearance#text-styling
+
+
+yarn add uri-scheme
+yarn uri-scheme add dhwajdialer --android
+https://reactnavigation.org/docs/deep-linking/
+https://reactnavigation.org/docs/deep-linking/#setup-on-android
+
+testing
+npx uri-scheme open [your deep link] --[ios|android]
+
+adb shell am start -W -a android.intent.action.VIEW -d [your deep link] [your android package name]
+adb shell am start -W -a android.intent.action.VIEW -d dhwajdialer com.dialer
+
+
+
+

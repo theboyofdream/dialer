@@ -6,7 +6,7 @@
 
 import axios, { AxiosError } from "axios";
 import { makeAutoObservable, observable, runInAction } from "mobx";
-import { baseUri, localStorage, timeout } from "../config";
+import { axiosInterceptor, baseUri, localStorage, timeout } from "../config";
 import { ApiResponse } from "../store";
 
 
@@ -63,9 +63,7 @@ export class DispositionStore {
     let dispositionArray: typeof this.dispositionArray = [];
     let dispositions: typeof this.dispositions = {};
 
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
-    await axios.postForm('/disposition-list')
+    await axiosInterceptor.postForm('/disposition-list')
       .then(({ status, statusText, data }) => {
         const r = data as ApiResponse<Dispositions>
         error = !(status === 200 ? r.status == 200 : false);

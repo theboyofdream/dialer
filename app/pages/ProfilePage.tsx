@@ -29,31 +29,30 @@ export const ProfilePage = observer(() => {
 
   return (
     <Screen>
+      <View style={{ alignItems: 'center', gap: 12, paddingTop: 100 }}>
+        {user.loggedIn && user.pic ?
+          <Avatar.Image
+            size={120}
+            source={{ uri: user.pic }}
+          />
+          :
+          <Avatar.Icon
+            size={120}
+            icon={'account'}
+          />
+        }
+        <View style={{ alignItems: 'center' }}>
+          <Text variant="titleLarge">
+            {user.firstname} {user.lastname}
+          </Text>
+          <Text variant="bodySmall" style={{ color: colors.onSurfaceDisabled }}>User ID: #{user.userId}</Text>
+        </View>
+      </View>
+      <Spacer size={12} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, flex: 1 }}
+        contentContainerStyle={{ gap: 12 }}
       >
-
-        <View style={{ alignItems: 'center', gap: 12, paddingTop: 100 }}>
-          {user.loggedIn && user.pic ?
-            <Avatar.Image
-              size={120}
-              source={{ uri: user.pic }}
-            />
-            :
-            <Avatar.Icon
-              size={120}
-              icon={'account'}
-            />
-          }
-          <View style={{ alignItems: 'center' }}>
-            <Text variant="titleLarge">
-              {user.firstname} {user.lastname}
-            </Text>
-            <Text variant="bodySmall" style={{ color: colors.onSurfaceDisabled }}>User ID: #{user.userId}</Text>
-          </View>
-        </View>
-
         <View style={{
           backgroundColor: colors.elevation.level1,
           padding: 12
@@ -113,10 +112,12 @@ export const ProfilePage = observer(() => {
               </Dialog.ScrollArea>
             </Dialog.Content>
             <Dialog.Actions>
-              <Button onPress={() => {
+              <Button onPress={async () => {
                 if (selectedNotificationSound) {
                   setNotificationSound(selectedNotificationSound)
                   setNotificationDialogVisibile(false)
+                  await getNotificationSounds()
+                    .then(setNotificationData)
                   return
                 }
                 ToastAndroid.show('Unkown error occurred.', ToastAndroid.SHORT)
@@ -181,14 +182,15 @@ export const ProfilePage = observer(() => {
           }
           onSubmit={async (v, { setSubmitting }) => {
             setSubmitting(true)
-            const r = await checkForUpdate()
-            // console.log(r)
-            if (!r.updateAvailable) {
+            const { updateAvailable } = await checkForUpdate()
+            if (!updateAvailable) {
               ToastAndroid.show("Already upto date", ToastAndroid.LONG);
             }
             setSubmitting(false)
           }}
         />
+
+        <Spacer size={50} />
 
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>

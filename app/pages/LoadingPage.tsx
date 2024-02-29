@@ -30,6 +30,14 @@ export const LoadingPage = observer(() => {
       await delay(100)
     }
 
+    await stores.appInfoStore.checkForUpdate()
+      .then(({ error, message }) => error && setError('app-update', message))
+    await updateProgress()
+
+    await stores.notificationStore.fetch()
+      .then(({ error, message }) => error && setError('notification', message))
+    await updateProgress()
+
     if (stores.statusStore.statusArray.length < 1) {
       await stores.statusStore.fetch()
         .then(({ error, message }) => error && setError('status', message))
@@ -52,14 +60,10 @@ export const LoadingPage = observer(() => {
       .then(({ error, message }) => error && setError('follow-ups', message))
     await updateProgress()
 
-    await stores.leadStore.fetch({ type: 'leads-with-notification' })
-      .then(({ error, message }) => error && setError('notification', message))
-    await updateProgress()
 
-    await stores.appInfoStore.checkForUpdate()
-      .then(({ error, message }) => error && setError('app-update', message))
-    await updateProgress()
-
+    // await stores.leadStore.fetch({ type: 'leads-with-notification' })
+    //   .then(({ error, message }) => error && setError('notification', message))
+    // await updateProgress()
 
     let hasNotificationPermission = false;
     if (!hasNotificationPermission) {
@@ -73,7 +77,7 @@ export const LoadingPage = observer(() => {
         })
     }
     hasNotificationPermission && await clearNotification()
-    for (let notification of stores.leadStore.leadsWithNotification) {
+    for (let notification of stores.notificationStore.notifications) {
       if (!hasNotificationPermission) { break }
       if (notification.followUpDate) {
         setNotification({
@@ -85,7 +89,7 @@ export const LoadingPage = observer(() => {
       }
     }
     hasNotificationPermission &&
-      ToastAndroid.show(`${stores.leadStore.upcomingNotificationCount} notifications set`, ToastAndroid.SHORT)
+      ToastAndroid.show(`${stores.notificationStore.upcomingCount} notifications set`, ToastAndroid.SHORT)
 
     await updateProgress()
 

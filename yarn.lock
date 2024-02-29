@@ -6916,6 +6916,11 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
+uri-scheme@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/uri-scheme/-/uri-scheme-1.2.0.tgz#1ca79d58f435400c626d3b17673691db2171413b"
+  integrity sha512-eEwuzuoX5wkBpf0AatbKXX9kGxk0QDbLMUUWeBIC3WhCi3f/D9o3ch5+wy9SeyfnGEjBLjgYlVgYq92IoBt/YA==
+
 use-latest-callback@^0.1.5, use-latest-callback@^0.1.7:
   version "0.1.9"
   resolved "https://registry.yarnpkg.com/use-latest-callback/-/use-latest-callback-0.1.9.tgz#10191dc54257e65a8e52322127643a8940271e2a"

@@ -4,7 +4,7 @@
 
 import axios, { AxiosError } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
-import { baseUri, timeout } from "./config";
+import { axiosInterceptor, baseUri, timeout } from "./config";
 import { ApiResponse } from "./store";
 import { dateFns } from "../utils";
 
@@ -71,9 +71,7 @@ export async function getDispositionWiseCallReport(params: Params) {
   let message = 'success';
   let dispositionWiseCalls: DispositionWiseCalls = parseJson({});
 
-  axios.defaults.baseURL = baseUri
-  axios.defaults.timeout = timeout
-  await axios.postForm(uri, stringifyJson(params))
+  await axiosInterceptor.postForm(uri, stringifyJson(params))
     .then(({ status, statusText, data }) => {
       const r = data as ApiResponse<DispositionWiseCalls>
       error = !(status === 200 ? r.status == 200 : false);

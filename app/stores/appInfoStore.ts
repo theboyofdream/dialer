@@ -7,7 +7,7 @@
 import axios, { AxiosError } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
 
-import { appVersion, baseUri, timeout } from './config';
+import { appVersion, axiosInterceptor } from './config';
 import { ApiResponse, JsonResponse } from "./store";
 
 
@@ -32,6 +32,7 @@ type AppInfo = {
 
 
 const uri = '/apk-version'
+
 export class AppInfoStore {
   appInfo: AppInfo = parseJson({});
   updateAvailable: boolean = false;
@@ -40,20 +41,18 @@ export class AppInfoStore {
     makeAutoObservable(this, {}, { autoBind: true })
   }
 
-  private async fetch() {
+  async checkForUpdate() {
     let error = false;
     let message = 'success';
-    let apkInfo = parseJson({});
+    let appInfo = parseJson({});
 
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
-    await axios.postForm(uri, { apk_name: 'dhwajdialer' })
+    await axiosInterceptor.postForm(uri, { apk_name: 'dhwajdialer' })
       .then(({ status, statusText, data }) => {
         const r = data as ApiResponse<AppInfo>;
         error = !(status === 200 ? r.status == 200 : false);
         message = status === 200 ? r.message : statusText;
         if (!error) {
-          apkInfo = parseJson(r.data as unknown as JsonResponse);
+          appInfo = parseJson(r.data as unknown as JsonResponse);
         }
       })
       .catch(e => {
@@ -62,24 +61,11 @@ export class AppInfoStore {
       })
 
     runInAction(() => {
-      this.save(apkInfo)
+      this.appInfo = appInfo;
+      this.updateAvailable = appVersion < appInfo.version;
     })
-    return { error, message, data: apkInfo }
-  }
 
-  async checkForUpdate() {
-    const { error, message, data } = await this.fetch()
-    return {
-      error,
-      message,
-      data,
-      updateAvailable: appVersion < data.version,
-    }
-  }
-
-  private save(appInfo: AppInfo) {
-    this.appInfo = appInfo;
-    this.updateAvailable = appVersion < appInfo.version;
+    return { error, message, data: appInfo, updateAvailable: appVersion < appInfo.version, }
   }
 }
 

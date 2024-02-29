@@ -66,7 +66,7 @@ export const LeadsPage = observer(() => {
   // }, [globalSearchEnabled])
 
   async function search() {
-    let arr = [...leadStore.filteredLeads]
+    let arr = [...leadStore.leads]
     if (searching) {
       arr = arr.filter(i => JSON.stringify(Object.values(i)).includes(searchQuery))
     }
@@ -84,8 +84,8 @@ export const LeadsPage = observer(() => {
     setLeads(arr)
   }
   useEffect(function reset() {
-    setLeads(leadStore.filteredLeads)
-  }, [searchQuery.length === 0, leadStore.filteredLeads])
+    setLeads(leadStore.leads)
+  }, [searchQuery.length === 0, leadStore.leads])
 
   const [activePreFilter, setActivePreFilter] = useState<typeof PreDefinedFilters[number] | null>('follow-ups')
   const togglePreFilter = (name: typeof PreDefinedFilters[number]) => setActivePreFilter(activePreFilter === name ? null : name)
@@ -123,7 +123,7 @@ export const LeadsPage = observer(() => {
     <Screen>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Text variant='titleMedium' style={{ paddingLeft: 8 }}>
-          <Text disabled style={{ color: colors.primary, fontWeight: 'bold' }}>{leadStore.leadsCount}</Text>
+          <Text disabled style={{ color: colors.primary, fontWeight: 'bold' }}>{leadStore.count}</Text>
           <Text style={{ color: colors.onSurfaceDisabled, fontWeight: 'bold' }}> • </Text>
           <Text>LEADS</Text>
         </Text>
@@ -229,14 +229,14 @@ export const LeadsPage = observer(() => {
         </View>
       }
       {
-        !fetchingData && leadStore.filteredLeads.length < 1 &&
+        !fetchingData && leadStore.leads.length < 1 &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant='titleMedium'>No data found!</Text>
           <Button onPress={fetchData} icon="refresh">refetch</Button>
         </View>
       }
       {
-        !fetchingData && leadStore.filteredLeads.length > 0 &&
+        !fetchingData && leadStore.leads.length > 0 &&
         <View style={{ flex: 1 }}>
           <ScrollView
           // showsVerticalScrollIndicator={false}

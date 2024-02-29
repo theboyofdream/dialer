@@ -1,14 +1,14 @@
 import { Button as PprButton, ButtonProps, useTheme } from 'react-native-paper'
 
 export function Button(props: ButtonProps) {
-  const { colors } = useTheme()
+  const { colors, roundness } = useTheme()
   return (
     <PprButton
       {...props}
       style={[
         {
           minWidth: 100,
-          // borderRadius: 15,
+          borderRadius: roundness * 3,
           // alignSelf: 'flex-start'
         },
         props.style

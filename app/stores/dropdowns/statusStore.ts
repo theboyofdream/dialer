@@ -5,7 +5,7 @@
 
 import { makeAutoObservable, runInAction } from "mobx";
 import axios, { AxiosError } from "axios";
-import { baseUri, localStorage, timeout } from "../config";
+import { axiosInterceptor, baseUri, localStorage, timeout } from "../config";
 import { ApiResponse } from "../store";
 
 
@@ -60,9 +60,7 @@ export class StatusStore {
     let statusArray: typeof this.statusArray = [];
     let statuses: typeof this.statuses = {}
 
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
-    await axios.postForm(uri)
+    await axiosInterceptor.postForm(uri)
       .then(({ status, statusText, data }) => {
         const r = data as ApiResponse<Status[]>
         error = !(status === 200 ? r.status == 200 : false);

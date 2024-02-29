@@ -15,12 +15,13 @@ const schema = yup.object().shape({
   firstname: yup.string().required('Firstname is required'),
   lastname: yup.string().required('Lastname is required'),
   email: yup.string().email('Invalid email format'),
-  mobile: yup.string().matches(/^\d{10}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
+  // mobile: yup.string().matches(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
+  mobile: yup.string().matches(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
   statusId: yup.number(),
-  dispositionId: yup.number(),
-  projectId: yup.array().of(yup.number()).required('Project name is required'),
-  typologyIds: yup.array().of(yup.number()),//.min(1, 'Must select at least one typology')),
-  sourceId: yup.number().required("Source name required"),
+  // dispositionId: yup.number(),
+  projectIds: yup.array().of(yup.number()).min(1, 'Project name is required').required('Project name is required'),
+  // typologyIds: yup.array().of(yup.number()),//.min(1, 'Must select at least one typology')),
+  sourceId: yup.number().min(1, 'Source name required').required("Source name required"),
 });
 const defaultValues: CreateLead = {
   firstname: '',
@@ -43,65 +44,74 @@ export const CreateLeadPage = observer(() => {
       <Formik
         initialValues={defaultValues}
         validationSchema={schema}
-        children={({ handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting, dirty, errors, values, touched, isValid }) => (
-          <View style={styles.form}>
-            <Spacer size={100} />
-            <View>
-              <Text variant="headlineLarge">Create</Text>
-              <Text variant="bodySmall">NEW LEAD</Text>
-            </View>
+        validateOnMount={true}
+        // children={({ handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting, dirty, errors, values, touched, isValid }) => (
+        children={({ handleChange, handleBlur, handleSubmit, setFieldValue, isSubmitting, dirty, errors, values, isValid }) => {
+          // console.log({ errors, values })
+          return (
+            <View style={styles.form}>
+              <Spacer size={100} />
+              <View>
+                <Text variant="headlineLarge">Create</Text>
+                <Text variant="bodySmall">NEW LEAD</Text>
+              </View>
 
-            <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
-              <Spacer size={12} />
+              <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
+                <Spacer size={12} />
 
-              <Input
-                placeholder='First name'
-                onChangeText={handleChange('firstname')}
-                onBlur={handleBlur('firstname')}
-                value={values.firstname}
-                errorText={touched.firstname && errors.firstname ? errors.firstname : undefined}
-              />
+                <Input
+                  placeholder='First name'
+                  onChangeText={handleChange('firstname')}
+                  onBlur={handleBlur('firstname')}
+                  value={values.firstname}
+                  errorText={errors.firstname}
+                  required
+                />
 
-              <Input
-                placeholder='Last name'
-                onChangeText={handleChange('lastname')}
-                onBlur={handleBlur('lastname')}
-                value={values.lastname}
-                errorText={touched.lastname && errors.lastname ? errors.lastname : undefined}
-              />
+                <Input
+                  placeholder='Last name'
+                  onChangeText={handleChange('lastname')}
+                  onBlur={handleBlur('lastname')}
+                  value={values.lastname}
+                  errorText={errors.lastname}
+                  required
+                />
 
-              <Input
-                placeholder='Email ID'
-                onChangeText={(mail) => {
-                  setFieldValue('email', mail.toLowerCase())
-                  handleChange('email')
-                }}
-                onBlur={handleBlur('email')}
-                value={values.email?.toLowerCase()}
-                errorText={touched.email && errors.email ? errors.email : undefined}
-              />
+                <Input
+                  placeholder='Email ID'
+                  onChangeText={(mail) => {
+                    setFieldValue('email', mail.toLowerCase())
+                    handleChange('email')
+                  }}
+                  onBlur={handleBlur('email')}
+                  value={values.email?.toLowerCase()}
+                  errorText={errors.email}
+                  textContentType="emailAddress"
+                />
 
-              <Input
-                placeholder='Mobile Number'
-                onChangeText={handleChange('mobile')}
-                onBlur={handleBlur('mobile')}
-                value={values.mobile}
-                errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
-              />
+                <Input
+                  placeholder='Mobile Number'
+                  onChangeText={handleChange('mobile')}
+                  onBlur={handleBlur('mobile')}
+                  value={values.mobile}
+                  errorText={errors.mobile}
+                  textContentType="telephoneNumber"
+                  required
+                />
 
-              <Dropdown
-                data={statusStore.statusArray}
-                initialValue={[]}
-                refresh={statusStore.fetch}
-                placeholder='Status'
-                onHide={(v) => {
-                  setFieldValue('statusId', v[0])
-                  handleBlur('statusId')
-                }}
-                errorText={touched.statusId && errors.statusId ? "Invalid value" : undefined}
-              />
+                <Dropdown
+                  data={statusStore.statusArray}
+                  initialValue={[]}
+                  refresh={statusStore.fetch}
+                  placeholder='Status'
+                  onHide={(v) => {
+                    setFieldValue('statusId', v[0])
+                    handleBlur('statusId')
+                  }}
+                  errorText={errors.statusId}
+                />
 
-              {/* <Dropdown
+                {/* <Dropdown
                 data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
                 initialValue={[values.dispositionId]}
                 refresh={dispositionStore.fetch}
@@ -111,23 +121,24 @@ export const CreateLeadPage = observer(() => {
                   setFieldValue('dispositionId', v[0])
                   handleBlur('dispositionId')
                 }}
-                errorText={touched.dispositionId && errors.dispositionId ? "Invalid value" : undefined}
+                errorText={ errors.dispositionId ? "Invalid value" : undefined}
               /> */}
 
-              <Dropdown
-                multiSelect
-                data={projectStore.projectArray}
-                initialValue={[]}
-                refresh={projectStore.fetch}
-                placeholder='Projects'
-                onHide={(v) => {
-                  setFieldValue('projectIds', v)
-                  handleBlur('projectIds')
-                }}
-                errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
-              />
+                <Dropdown
+                  multiSelect
+                  data={projectStore.projectArray}
+                  initialValue={[]}
+                  refresh={projectStore.fetch}
+                  placeholder='Projects'
+                  onHide={(v) => {
+                    setFieldValue('projectIds', v)
+                    handleBlur('projectIds')
+                  }}
+                  errorText={errors.projectIds ? `${errors.projectIds}` : undefined}
+                  required
+                />
 
-              {/* <Dropdown
+                {/* <Dropdown
                 multiSelect
                 data={typologyStore.typologies}
                 initialValue={[]}
@@ -137,33 +148,35 @@ export const CreateLeadPage = observer(() => {
                   setFieldValue('typologyIds', v)
                   handleBlur('typologyIds')
                 }}
-                errorText={touched.typologyIds && errors.typologyIds ? "Invalid value" : undefined}
+                errorText={ errors.typologyIds ? "Invalid value" : undefined}
               /> */}
 
-              <Dropdown
-                data={leadSourceStore.leadSources}
-                initialValue={[]}
-                refresh={leadSourceStore.fetch}
-                placeholder='Lead Source'
-                onHide={(v) => {
-                  setFieldValue('sourceId', v[0])
-                  handleBlur('sourceId')
-                }}
-                errorText={touched.sourceId && errors.sourceId ? "Invalid value" : undefined}
-              />
+                <Dropdown
+                  data={leadSourceStore.leadSources}
+                  initialValue={[]}
+                  refresh={leadSourceStore.fetch}
+                  placeholder='Lead Source'
+                  onHide={(v) => {
+                    setFieldValue('sourceId', v[0])
+                    handleBlur('sourceId')
+                  }}
+                  errorText={errors.sourceId}
+                  required
+                />
 
-              <Spacer size={6} />
-              <Button
-                mode="contained"
-                onPress={() => handleSubmit()}
-                style={styles.submitBtn}
-                disabled={isSubmitting || !(isValid && dirty)}
-                children="submit"
-              />
-              <Spacer size={100} />
-            </ScrollView>
-          </View>
-        )}
+                <Spacer size={6} />
+                <Button
+                  mode="contained"
+                  onPress={() => handleSubmit()}
+                  style={styles.submitBtn}
+                  disabled={isSubmitting || !isValid}
+                  children="submit"
+                />
+                <Spacer size={100} />
+              </ScrollView>
+            </View>
+          )
+        }}
         onSubmit={async (form, { setSubmitting }) => {
           setSubmitting(true);
           await leadStore.createLead(form)

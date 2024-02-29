@@ -12,7 +12,8 @@ export type InputProps = TextInputProps & {
 
 export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => {
   const { colors } = useTheme()
-  const isError = props.required && (errorText != undefined || props.value == undefined || props.value == '')
+  // const isError = props.required && (errorText != undefined || props.value == undefined || props.value == '')
+  const isError = errorText != undefined || (props.required && (props.value == undefined || props.value == ''))
   const styles = {
     text: [
       { color: colors.onSurface },
@@ -23,7 +24,12 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
       paddingHorizontal: 8,
       height: props.multiline ? undefined : 46,
       marginVertical: 4,
-    }
+      borderTopStartRadius: 9,
+      borderTopEndRadius: 9,
+      borderBottomStartRadius: 9,
+      borderBottomEndRadius: 9,
+      // borderRadius: 9
+    } as TextStyle
   }
 
   return (
@@ -37,7 +43,8 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
           {props.required &&
             <Text
               variant='labelMedium'
-              style={[isError && { color: colors.error }]}
+              // style={[isError && { color: colors.error }]}
+              style={[{ color: colors.error }]}
             >*</Text>
           }
         </View>

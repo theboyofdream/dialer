@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { ColorValue, Pressable, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Badge, Text, useTheme } from "react-native-paper";
 
 import { observer } from 'mobx-react-lite';
 import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotificationPage, ReportPage } from "./pages";
@@ -21,7 +21,7 @@ export type StackNavigatorParams = {
   loading: undefined,
   home: undefined,
   "lead details": { leadId: number },
-  notifications: undefined,
+  // notifications: undefined,
   login: undefined
 }
 
@@ -37,7 +37,7 @@ const StackNavigator = observer(() => {
             <Stack.Screen name='loading' component={LoadingPage} />
             <Stack.Screen name='home' component={BottomTabNavigator} />
             <Stack.Screen name='lead details' component={LeadDetailPage} />
-            <Stack.Screen name='notifications' component={NotificationPage} />
+            {/* <Stack.Screen name='notifications' component={NotificationPage} /> */}
           </>
           :
           <Stack.Screen name='login' component={LoginPage} />
@@ -50,8 +50,8 @@ const StackNavigator = observer(() => {
 function generateBottomTabIcon(name: string, color: number | ColorValue | undefined) {
   const props = { size: 24, color }
   const bottomTabIcons = {
-    'list': <EntypoIcon {...props} name='list' />,
-    'search': <FeatherIcon {...props} name='search' />,
+    'leads': <EntypoIcon {...props} name='list' />,
+    'alerts': <EntypoIcon {...props} name='bell' />,
     'reports': <EntypoIcon {...props} name='bar-graph' />,
     'create lead': <MaterialCommunityIcons {...props} name='account-plus' />,
     'profile': <MaterialCommunityIcons {...props} name='account-circle' />
@@ -61,17 +61,21 @@ function generateBottomTabIcon(name: string, color: number | ColorValue | undefi
 
 
 type BottomTabNavigatorParams = {
-  list: undefined,
+  leads: undefined,
+  alerts: undefined,
   'create lead': undefined,
   reports: undefined,
   profile: undefined
 }
 
 const Tab = createBottomTabNavigator<BottomTabNavigatorParams>();
-function BottomTabNavigator() {
+const BottomTabNavigator = observer(() => {
   const { colors } = useTheme()
+  const { upcomingCount } = useStores().notificationStore
+
   return (
     <Tab.Navigator
+      // initialRouteName='alerts'
       screenOptions={defaultScreenOptions}
       tabBar={({ state, navigation }) => {
         return (
@@ -104,12 +108,29 @@ function BottomTabNavigator() {
                     style={{
                       flex: 1,
                       justifyContent: 'center',
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      position: 'relative'
                     }}
                     onPress={onPress}
                   >
+                    {upcomingCount > 0 && route.name === 'alerts' &&
+                      <Badge style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        zIndex: 999,
+                        transform: [
+                          { translateX: -15 },
+                          { translateY: -5 }
+                        ]
+                      }}
+                      >{upcomingCount}</Badge>
+                    }
                     {generateBottomTabIcon(route.name, color)}
-                    <Text variant='bodySmall' style={{ color, textTransform: 'capitalize' }}>{route.name}</Text>
+                    <Text variant='bodySmall' style={{ color, textTransform: 'capitalize' }}>
+                      {route.name.slice(0, 7)}
+                    </Text>
+
                   </Pressable>
                 )
               })
@@ -118,13 +139,14 @@ function BottomTabNavigator() {
         )
       }}
     >
-      <Tab.Screen name='list' component={LeadsPage} />
+      <Tab.Screen name='leads' component={LeadsPage} />
+      <Tab.Screen name='alerts' component={NotificationPage} />
       <Tab.Screen name='create lead' component={CreateLeadPage} />
       <Tab.Screen name='reports' component={ReportPage} />
       <Tab.Screen name='profile' component={ProfilePage} />
     </Tab.Navigator>
   )
-}
+})
 
 
 export function Navigation() {

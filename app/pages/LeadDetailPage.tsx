@@ -26,7 +26,7 @@ const schema = yup.object().shape({
   franchiseId: yup.number().min(1, 'Franchise ID is required').required('Franchise ID is required'),
   firstname: yup.string().required('Firstname is required'),
   lastname: yup.string().required('Lastname is required'),
-  mobile: yup.string().matches(/^\d{10}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
+  mobile: yup.string().matches(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
   email: yup.string().email('Invalid email format'),
   address: yup.string(),
   location: yup.string(),
@@ -171,7 +171,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                   </View>
                 </View>
                 <Formik
-                  initialValues={{ ...lead, remarks: "" }}
+                  initialValues={{ ...lead, remarks: "", dispositionId: 0 }}
                   validationSchema={schema}
                   validateOnMount={true}
                   // children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting, dirty, touched }) => (
@@ -209,6 +209,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             value={values.mobile}
                             // errorText={touched.mobile && errors.mobile ? errors.mobile : undefined}
                             errorText={errors.mobile}
+                            textContentType='telephoneNumber'
                             required
                           />
                         }
@@ -222,6 +223,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onBlur={handleBlur('email')}
                           value={values.email.toLowerCase()}
                           // errorText={touched.email && errors.email ? errors.email : undefined}
+                          textContentType='emailAddress'
                           errorText={errors.email}
                         />
 
@@ -241,6 +243,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           onChangeText={handleChange('location')}
                           onBlur={handleBlur('location')}
                           value={values.location}
+                          textContentType="location"
                           // errorText={touched.location && errors.location ? errors.location : undefined}
                           errorText={errors.location}
                         />
@@ -400,7 +403,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                         <View style={styles.submitBtn}>
                           <Button
                             mode="contained"
-                            children={isSubmitting ? "Saving" : "Save"}
+                            children={isSubmitting ? "Saving..." : "Save"}
                             // disabled={!(isValid && dirty) || isSubmitting}
                             disabled={!isValid || isSubmitting}
                             onPress={() => handleSubmit()}

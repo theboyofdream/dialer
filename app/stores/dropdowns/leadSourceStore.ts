@@ -4,7 +4,7 @@
 
 import axios, { AxiosError } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
-import { baseUri, localStorage, timeout } from "../config";
+import { axiosInterceptor, baseUri, localStorage, timeout } from "../config";
 import { ApiResponse } from "../store";
 
 
@@ -51,9 +51,7 @@ export class LeadSourceStore {
     let message = 'success';
     let leadSources: LeadSources = [];
 
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
-    await axios.postForm(uri)
+    await axiosInterceptor.postForm(uri)
       .then(({ status, statusText, data }) => {
         const r = data as ApiResponse<LeadSources>
         error = !(status === 200 ? r.status == 200 : false);

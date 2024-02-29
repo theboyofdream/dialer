@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { ApiResponse, JsonResponse } from "./store";
-import { baseUri, localStorage, timeout } from './config'
+import { axiosInterceptor, baseUri, localStorage, timeout } from './config'
 
 
 function parseJson(json: JsonResponse): UserData {
@@ -55,9 +55,7 @@ export class AuthStore {
     let message = 'success';
     let user = parseJson({});
 
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
-    await axios.postForm(uri, params)
+    await axiosInterceptor.postForm(uri, params)
       .then(({ status, statusText, data }) => {
         const r = data as ApiResponse<UserData>;
         error = !(status === 200 ? r.status == 200 : false);
@@ -76,6 +74,13 @@ export class AuthStore {
       localStorage.set(key, JSON.stringify(user))
     })
     return { error, message }
+  }
+
+  get userDataForReq() {
+    return {
+      user_id: this.user.userId,
+      franchise_id: this.user.franchiseId
+    }
   }
 
   logout() {

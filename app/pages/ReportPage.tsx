@@ -43,7 +43,7 @@ const schema = yup.object().shape({
 
 export const ReportPage = observer(() => {
   const { authStore: { user: { userId, franchiseId } } } = useStores()
-  const { colors } = useTheme()
+  const { colors, roundness } = useTheme()
   const [open, setOpen] = React.useState(false);
   const onDismiss = React.useCallback(() => {
     setOpen(false);
@@ -66,7 +66,7 @@ export const ReportPage = observer(() => {
           // enableReinitialize
           initialValues={defaultFormValues}
           validationSchema={schema}
-          children={({ values, setFieldValue, errors, isValid, dirty, isSubmitting, handleSubmit, handleBlur, handleChange }) => (
+          children={({ values, setFieldValue, errors, isValid, isSubmitting, handleSubmit, handleBlur, handleChange }) => (
             <View style={styles.form}>
               <DatePickerModal
                 locale="en"
@@ -108,7 +108,7 @@ export const ReportPage = observer(() => {
               <Button
                 style={{ alignSelf: 'flex-end' }}
                 mode="contained"
-                disabled={!(isValid && dirty) || isSubmitting}
+                disabled={!isValid || isSubmitting}
                 onPress={() => handleSubmit()}
               >
                 Apply
@@ -147,9 +147,11 @@ export const ReportPage = observer(() => {
               <View style={{ flexDirection: 'row' }}>
                 <View style={{
                   backgroundColor: colors.primary,
-                  paddingVertical: 20,
-                  padding: 1,
+                  // paddingVertical: 20,
+                  // padding: 1,
+                  borderRadius: roundness,
                   width: `${Math.round((dispositionWiseCallReport[k as keyof DispositionWiseCalls] / maxCount) * 100) || 0}%`,
+                  height: roundness * 5,
                   minWidth: 1
                 }}
                 />

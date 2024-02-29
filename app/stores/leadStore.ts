@@ -1,17 +1,13 @@
 import { AuthStore } from './authStore';
-// "pk_apk_version_id": "1",
-// "apk_category": "dhwajdialer",
-// "msg": "Update APK",
-// "version_no": "1.01",
-// "apk_path": "https://sahikarma.com/apk_files/dhwajdialer_v1.01.apk"
 
 import axios, { AxiosError } from "axios";
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { dateFns } from "../utils";
-import { baseUri, timeout } from './config';
+import { axiosInterceptor, baseUri, timeout } from './config';
 import { ApiResponse, JsonResponse } from "./store";
 import { ToastAndroid } from 'react-native';
+import { NotificationStore } from './notificationStore';
 
 
 export type Lead = {
@@ -57,7 +53,7 @@ export type LeadHistory = {
 }
 
 
-function parseJson(jsonArray: JsonResponse[]) {
+export function parseLeadsJson(jsonArray: JsonResponse[]) {
   let arrayOfLeads: Lead[] = []
   let leads: { [key: number]: Lead } = {}
   jsonArray.map(json => {
@@ -94,82 +90,7 @@ function parseJson(jsonArray: JsonResponse[]) {
     arrayOfLeads,
   }
 }
-/**
- "pk_leadTr_id": "25931",
-            "fk_lead_id": "27199",
-            "fk_user_id": "21",
-            "fk_disposition_id": "2",
-            "leadTr_followup_date": "2024-02-09 11:13:00",
-            "leadTr_remarks": "Call back later",
-            "active": "0",
-            "curdate": "2024-02-08 11:15:08",
-            "pk_lead_id": "27199",
-            "fk_franchise_id": "8",
-            "lead_name": "Siddhesh",
-            "lead_surname": "Sali",
-            "lead_mobile": "7045594772",
-            "lead_phone": null,
-            "lead_email": "",
-            "lead_sex": null,
-            "lead_type": "3",
-            "lead_remarks": "Call back later",
-            "lead_pincode": null,
-            "lead_location": null,
-            "lead_city": "",
-            "lead_state": "",
-            "lead_address": "",
-            "fk_source_id": "0",
-            "fk_subsource_id": null,
-            "fk_reasons_id": "0",
-            "fk_subreason_id": "0",
-            "date_of_visit": "",
-            "lead_is_closed": "0",
-            "lead_created_by": "0",
-            "lead_modified_by": "21",
-            "lead_modified_date": null,
-            "client_visited_date": null,
-            "fk_project_id": "38",
-            "fk_customer_enquiry_id": null,
-            "lead_assign_to": "21",
-            "lead_claimed": "0",
-            "lead_status": "1",
-            "lead_created_date": "2024-02-07 17:31:56"
- */
-// function parseFilteredLeadJson(jsonArray: JsonResponse[]) {
-//   let arrayOfLeads: Lead[] = []
-//   let leads: { [key: number]: Lead } = {}
-//   jsonArray.map(json => {
-//     const lead = {
-//       id: parseInt(json['pk_lead_id']),
-//       franchiseId: parseInt(json['fk_franchise_id']) || 0,
-//       firstname: json['lead_name'] || '',
-//       lastname: json['lead_surname'] || '',
-//       mobile: json['lead_mobile'] || '',
-//       email: json['lead_email'] || '',
-//       remarks: json['lead_remarks'] || '',
-//       pincode: json['lead_pincode'] || '',
-//       location: json['lead_location'] || '',
-//       city: json['lead_city'] || '',
-//       stateId: json['lead_state'] || '',
-//       address: json['lead_address'] || '',
-//       statusId: parseInt(json['lead_type']) || 0,
-//       projectIds: (json['fk_project_id'].trim().split(',') || []) as unknown as number[],
-//       dispositionId: parseInt(json['fk_disposition_id']) || 0,
-//       sourceId: parseInt(json['fk_source_id']) || 0,
-//       typologyIds: [],
-//       dateOfVisit: dateFns.parseDate(json['date_of_visit']),
-//       followUpDate: dateFns.parseDate(json['leadTr_followup_date']),
-//     }
 
-//     arrayOfLeads.push(lead)
-//     leads[lead.id] = lead
-//   })
-
-//   return {
-//     leads,
-//     arrayOfLeads,
-//   }
-// }
 function parseLeadHistoryJson(jsonArray: Array<{ [key: string]: string }>) {
   let leadHistory: LeadHistory[] = []
   jsonArray.map(json => {
@@ -201,48 +122,39 @@ const Urls = {
   "lead-history": "/lead-history"
 }
 
-export type fetchTypes = { type: "follow-ups" | "interested-leads" | "fresh-leads" | "leads-with-notification" }
+export type fetchTypes = { type: "follow-ups" | "interested-leads" | "fresh-leads" }
 export class LeadStore {
+  private notificationStore: NotificationStore
   private authStore: AuthStore;
-  private leadsArray: Lead[] = []
-  private leadsObject: { [key: number]: Lead } = {}
-  filteredLeads: typeof this.leadsArray = []
-  leadsCount: number = 0
-  leadsWithNotification: typeof this.leadsArray = []
-  notificationsCount: number = 0
-  upcomingNotificationCount = 0
 
-  constructor(authStore: AuthStore) {
+  private leadsObj: { [key: number]: Lead } = {}
+  leads: Lead[] = []
+  count: number = 0
+
+  constructor(authStore: AuthStore, notificationStore: NotificationStore) {
     this.authStore = authStore;
-    this.configAxios()
-    makeAutoObservable(this, {}, { autoBind: true })
-  }
+    this.notificationStore = notificationStore;
 
-  private configAxios() {
-    axios.defaults.baseURL = baseUri
-    axios.defaults.timeout = timeout
+    makeAutoObservable(this, {}, { autoBind: true })
   }
 
   async fetch({ type }: fetchTypes) {
     let error = false;
     let message = 'success';
-    let leadsArray: typeof this.leadsArray = [];
-    let leadsObject: typeof this.leadsObject = {};
+    let arr: typeof this.leads = [];
+    let obj: typeof this.leadsObj = {};
     let count: number = 0;
 
-    await axios
-      .postForm(Urls[type], {
-        user_id: this.authStore.user.userId,
-        franchise_id: this.authStore.user.franchiseId
-      })
+    await axiosInterceptor
+      .postForm(Urls[type], this.authStore.userDataForReq)
       .then(response => {
         const data = response.data as ApiResponse<Lead[]> & { count: number }
         error = !(response.status === 200 ? data.status == 200 : false)
         message = response.status === 200 ? data.message : response.statusText;
         if (!error) {
-          let parsedJson = parseJson(data.data as unknown as Array<{ [k: string]: string }>)
-          leadsArray = parsedJson.arrayOfLeads;
-          leadsObject = parsedJson.leads;
+          let parsedJson = parseLeadsJson(data.data as unknown as Array<{ [k: string]: string }>)
+          arr = parsedJson.arrayOfLeads;
+          obj = parsedJson.leads;
           count = data.count
         }
       })
@@ -252,34 +164,22 @@ export class LeadStore {
       })
 
     runInAction(() => {
-      if (type != 'leads-with-notification') {
-        this.leadsArray = leadsArray
-        this.leadsObject = leadsObject
-        this.leadsCount = count
-
-        this.filteredLeads = leadsArray
-      } else {
-        this.leadsWithNotification = leadsArray
-        this.leadsObject = { ...this.leadsObject, ...leadsObject };
-        this.notificationsCount = count
-        count = 0;
-        leadsArray.map(l =>
-          l.followUpDate &&
-          l.followUpDate.getTime() > (new Date()).getTime() &&
-          count++
-        )
-        this.upcomingNotificationCount = count
-      }
+      this.leadsObj = obj
+      this.leads = arr
+      this.count = count
     })
 
     return { error, message }
   }
 
   getLeadById(id: number) {
-    if (this.leadsObject[id]) {
-      return this.leadsObject[id]
+    let lead = null;
+    if (this.leadsObj[id]) {
+      lead = this.leadsObj[id]
+    } else if (this.notificationStore.notificationsObj[id]) {
+      lead = this.notificationStore.notificationsObj[id]
     }
-    return null;
+    return lead;
   }
 
   async fetchLeadById(id: number) {
@@ -287,7 +187,7 @@ export class LeadStore {
     let message = 'success';
     let lead;
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['lead'], {
         user_id: this.authStore.user.userId,
         franchise_id: this.authStore.user.franchiseId,
@@ -299,7 +199,7 @@ export class LeadStore {
         message = response.status === 200 ? data.message : response.statusText;
         console.log([data, response.headers])
         if (!error) {
-          lead = parseJson([data.data] as unknown as Array<{ [k: string]: string }>).arrayOfLeads[0]
+          lead = parseLeadsJson([data.data] as unknown as Array<{ [k: string]: string }>).arrayOfLeads[0]
         }
       })
       .catch(err => {
@@ -315,7 +215,7 @@ export class LeadStore {
     let message = 'success';
     let leadHistory: LeadHistory[] = []
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['lead-history'], {
         user_id: this.authStore.user.userId,
         franchise_id: this.authStore.user.franchiseId,
@@ -341,11 +241,11 @@ export class LeadStore {
   async applyFilters(params: { fromDate: Date, toDate: Date, dispositionIds: number[], statusId: number }) {
     let error = false;
     let message = 'success';
-    let leadsArray: typeof this.leadsArray = [];
-    let leadsObject: typeof this.leadsObject = {};
+    let arr: typeof this.leads = [];
+    let obj: typeof this.leadsObj = {};
     let count: number = 0;
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['filters'], {
         user_id: this.authStore.user.userId,
         franchise_id: this.authStore.user.franchiseId,
@@ -356,14 +256,15 @@ export class LeadStore {
       })
       .then(response => {
         const data = response.data as ApiResponse<Lead[]> & { count: number }
-        error = !(response.status === 200 ? data.status == 200 : false)
+        error = !(response.status === 200 ? (data.status == 200 || data.status == 404) : false)
         message = response.status === 200 ? data.message : response.statusText;
-        console.log([data, response.headers])
+        // console.log({ data })
         if (!error) {
-          let parsedJson = parseJson(data.data as unknown as Array<{ [k: string]: string }>)
-          leadsArray = parsedJson.arrayOfLeads;
-          leadsObject = parsedJson.leads;
+          let parsedJson = parseLeadsJson(data.data as unknown as Array<{ [k: string]: string }>)
+          arr = parsedJson.arrayOfLeads;
+          obj = parsedJson.leads;
           count = data.count
+          // console.log(parsedJson)
         }
       })
       .catch(err => {
@@ -372,11 +273,9 @@ export class LeadStore {
       })
 
     runInAction(() => {
-      this.leadsArray = leadsArray
-      this.leadsObject = leadsObject
-      this.leadsCount = count
-
-      this.filteredLeads = leadsArray
+      this.leadsObj = { ...obj }
+      this.leads = arr
+      this.count = count
     })
 
     return { error, message }
@@ -385,11 +284,11 @@ export class LeadStore {
   async searchLeads(name: string, mobile: string) {
     let error = false;
     let message = 'success';
-    let leadsArray: typeof this.leadsArray = [];
-    let leadsObject: typeof this.leadsObject = {};
+    let arr: typeof this.leads = [];
+    let obj: typeof this.leadsObj = {};
     let count: number = 0;
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['search'], {
         user_id: this.authStore.user.userId,
         franchise_id: this.authStore.user.franchiseId,
@@ -398,13 +297,13 @@ export class LeadStore {
       })
       .then(response => {
         const data = response.data as ApiResponse<Lead[]> & { count: number }
-        error = !(response.status === 200 ? data.status == 200 : false)
+        error = !(response.status === 200 ? (data.status == 200 || data.status == 404) : false)
         message = response.status === 200 ? data.message : response.statusText;
-        console.log([JSON.stringify(data), response.headers])
+
         if (!error) {
-          let parsedJson = parseJson(data.data as unknown as Array<{ [k: string]: string }>)
-          leadsArray = parsedJson.arrayOfLeads;
-          leadsObject = parsedJson.leads;
+          let parsedJson = parseLeadsJson(data.data as unknown as Array<{ [k: string]: string }>)
+          arr = parsedJson.arrayOfLeads;
+          obj = parsedJson.leads;
           count = data.count
         }
       })
@@ -414,11 +313,9 @@ export class LeadStore {
       })
 
     runInAction(() => {
-      this.leadsArray = leadsArray
-      this.leadsObject = leadsObject
-      this.leadsCount = count
-
-      this.filteredLeads = leadsArray
+      this.leadsObj = obj
+      this.leads = arr
+      this.count = count
     })
 
     return { error, message }
@@ -428,7 +325,7 @@ export class LeadStore {
     let error = false;
     let message = 'success';
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['create'], {
         ...lead,
         user_id: this.authStore.user.userId,
@@ -451,7 +348,7 @@ export class LeadStore {
     let error = false;
     let message = 'success';
 
-    await axios
+    await axiosInterceptor
       .postForm(Urls['update'], {
         date_of_visit: params.dateOfVisit ? dateFns.stringifyDate(params.dateOfVisit, "datetime") : '',
         fk_disposition_id: params.franchiseId,
@@ -484,27 +381,33 @@ export class LeadStore {
 
     if (!error) {
       ToastAndroid.show('Lead updated successfully', ToastAndroid.SHORT)
-      this.removeLeadFromStore(params.id)
+      this.removeLeadFromStores(params.id)
     }
 
     return { error, message }
   }
 
-  clearStore() {
-    this.filteredLeads = []
-    this.leadsArray = []
-    this.leadsObject = {}
+  clear() {
+    this.leads = []
+    this.leadsObj = {}
+    this.count = 0
+
+    this.notificationStore.clear()
   }
 
-  private removeLeadFromStore(id: number) {
+  private removeLeadFromStores(id: number) {
     // console.log(id)
-    if (this.leadsObject[id]) {
-      // console.log(this.leadsObject[id])
-      delete this.leadsObject[id]
-      // let index = this.leadsArray.findIndex(l => l.id == id)
-      // index && this.leadsArray.splice(index, 1)
-      // console.log(index)
-    }
+    // console.log(this.leadsObject[id])
+    // let index = this.leadsArray.findIndex(l => l.id == id)
+    // index && this.leadsArray.splice(index, 1)
+    // console.log(index)
+
+    // if (this.leadsObj[id]) {
+    delete this.leadsObj[id]
+    delete this.notificationStore.notificationsObj[id]
+    // }
+    // if(this.notificationStore.notificationsObj[id]){
+    // }
   }
 }
 

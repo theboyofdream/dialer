@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 
-import { Provider as PaperProvider } from 'react-native-paper';
+import { MD3Colors, Provider as PaperProvider, configureFonts } from 'react-native-paper';
 import { en, registerTranslation } from 'react-native-paper-dates';
 registerTranslation('en', en)
 
@@ -22,6 +22,16 @@ import { RootStoreProvider, rootStore } from './stores';
 import { theme } from './utils';
 
 
+notifee.onBackgroundEvent(async ({ type, detail }) => {
+  const { notification, pressAction } = detail;
+  if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+    if (notification) {
+      notification
+    }
+  }
+});
+
+
 export default function App() {
 
   async function init() {
@@ -34,6 +44,7 @@ export default function App() {
       switch (type) {
         case EventType.PRESS:
           if (detail && detail.notification && detail.notification.id) {
+            console.log(detail)
             removeNotification(detail.notification?.id)
           }
           break;
@@ -45,7 +56,14 @@ export default function App() {
   }, []);
 
   return (
-    <PaperProvider theme={theme}>
+    // <PaperProvider theme={theme}>
+    // <PaperProvider theme={{
+    //   ...MD3Colors,
+    //   // mode: 'exact',
+    //   // roundness: 0,
+    //   // fonts: customFonts
+    // }}>
+    <PaperProvider>
       <RootStoreProvider value={rootStore}>
         <AppUpdateAlert />
         <ErrorAlert />
@@ -54,5 +72,3 @@ export default function App() {
     </PaperProvider>
   )
 }
-
-

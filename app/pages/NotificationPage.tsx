@@ -3,7 +3,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import { observer } from "mobx-react-lite";
 import { Input, LeadListItem, Screen, Spacer, View } from "../components";
 import { Lead, useStores } from "../stores";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, IconButton, Text, TextInput, useTheme } from "react-native-paper";
 import { RefreshControl, ScrollView, ToastAndroid } from "react-native";
 import { delay } from "../utils";
@@ -13,25 +13,23 @@ import { clearNotification, handleNotificationPermission, setNotification } from
 
 export const NotificationPage = observer(() => {
   const { canGoBack, goBack, navigate } = useNavigation();
-  const { colors } = useTheme()
-  const { leadStore, errorStore } = useStores()
+  const { colors, roundness } = useTheme()
+  const { leadStore, errorStore, notificationStore } = useStores()
 
+  const searchRef = useRef('')
   const [searchQuery, setSearchQuery] = useState('');
-  const searching = searchQuery.length > 0;
 
-  const [leads, setLeads] = useState<Lead[]>([])
   function search() {
-    let arr = [...leadStore.leadsWithNotification]
-    if (searching) {
-      arr = arr
-        .filter(i => JSON.stringify(Object.values(i))
-          .includes(searchQuery))
+    if (searchRef.current.length > 2) {
+      setSearchQuery(searchRef.current)
     }
-    setLeads(arr)
   }
-  useEffect(function reset() {
-    setLeads(leadStore.leadsWithNotification)
-  }, [searchQuery.length === 0, leadStore.leadsWithNotification])
+  function onSearchTextChange(text: string) {
+    searchRef.current = text;
+    if (text.length < 3) {
+      setSearchQuery('')
+    }
+  }
 
   async function handleNotificationsRefresh() {
     let hasNotificationPermission = false;
@@ -50,32 +48,32 @@ export const NotificationPage = observer(() => {
         })
     }
     hasNotificationPermission && await clearNotification()
-    for (let notification of leadStore.leadsWithNotification) {
+    for (let notification of notificationStore.notifications) {
       if (!hasNotificationPermission) { break }
       if (notification.followUpDate) {
         setNotification({
           leadId: notification.id,
           fullName: notification.firstname + ' ' + notification.lastname,
           remarks: notification.remarks,
-          notificationDate: notification.followUpDate
+          // notificationDate: notification.followUpDate
+          notificationDate: new Date(new Date().getTime() + 30000)
         })
+        break;
       }
     }
     hasNotificationPermission &&
-      ToastAndroid.show(`${leadStore.upcomingNotificationCount} notifications set`, ToastAndroid.SHORT)
+      ToastAndroid.show(`${notificationStore.upcomingCount} notifications set`, ToastAndroid.SHORT)
 
   }
   useEffect(() => {
-    if (leadStore.leadsWithNotification.length > 0) {
-      handleNotificationsRefresh()
-    }
-  }, [leadStore.leadsWithNotification])
+    notificationStore.upcomingCount > 0 && handleNotificationsRefresh()
+  }, [notificationStore.notifications])
 
   const [fetchingData, setFetchingData] = useState(false)
   async function fetchData() {
     setFetchingData(true)
 
-    await leadStore.fetch({ type: "leads-with-notification" })
+    await notificationStore.fetch()
       .then(({ error, message }) =>
         error &&
         errorStore.add({
@@ -89,31 +87,19 @@ export const NotificationPage = observer(() => {
     setFetchingData(false)
   }
 
-  useEffect(() => {
-    leadStore.leadsWithNotification.length < 1 && fetchData()
-  }, [])
-
-  function handleBack() {
-    canGoBack() ? goBack() : navigate('home')
-  }
-
   return (
     <Screen>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <IconButton icon={"arrow-left"} onPress={handleBack} />
-        <Text variant='titleMedium'>Notifications</Text>
-        <IconButton icon={"arrow-left"} style={{ opacity: 0 }} />
-      </View>
+      <Text variant='titleLarge' style={{ padding: 12, paddingLeft: 10 }}>Notifications</Text>
 
       <View style={{ marginHorizontal: 6 }}>
         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
           <View style={{ flexDirection: 'row' }}>
-            <Text variant='titleSmall'>{leadStore.upcomingNotificationCount}</Text>
+            <Text variant='titleSmall'>{notificationStore.upcomingCount}</Text>
             <Text style={{ color: colors.onSurfaceDisabled }}> Upcoming Notifications</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
-            <Text variant='titleSmall'>{leadStore.notificationsCount}</Text>
+            <Text variant='titleSmall'>{notificationStore.totalCount}</Text>
             <Text style={{ color: colors.onSurfaceDisabled }}> Total</Text>
           </View>
         </View>
@@ -125,18 +111,17 @@ export const NotificationPage = observer(() => {
             <Input
               hideLabel
               placeholder="Search by name/mobile"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={onSearchTextChange}
               right={
                 <TextInput.Icon
-                  style={{
-                    backgroundColor: searching ? colors.primary : undefined,
-                    borderRadius: 0,
-                    marginRight: 0
-                  }}
-                  color={searching ? colors.onPrimary : undefined}
                   icon="magnify"
                   onPress={search}
+                  color={colors.onPrimary}
+                  style={{
+                    backgroundColor: colors.primary,
+                    borderRadius: roundness * 2.5,
+                    marginRight: 0,
+                  }}
                 />
               }
             />
@@ -151,7 +136,7 @@ export const NotificationPage = observer(() => {
         </View>
       }
       {
-        !fetchingData && leadStore.filteredLeads.length > 0 &&
+        !fetchingData && notificationStore.notifications.length > 0 &&
         <View style={{ flex: 1 }}>
           <ScrollView
             refreshControl={
@@ -162,17 +147,30 @@ export const NotificationPage = observer(() => {
             }
           >
             {
-              leads.map(lead => <LeadListItem key={lead.id} leadId={lead.id} />)
+              notificationStore.notifications.map((lead, index) => {
+                if (searchQuery.length > 2) {
+                  if (
+                    lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.mobile.toLowerCase().includes(searchQuery.toLowerCase())
+                  ) {
+                    // if (JSON.stringify(Object.values(lead)).toLowerCase().includes(searchQuery.toLowerCase())) {
+                    return <LeadListItem key={index} leadId={lead.id} />
+                  }
+                  return undefined
+                }
+                return <LeadListItem key={index} leadId={lead.id} />
+              })
             }
             <Spacer size={50} />
           </ScrollView>
         </View>
       }
       {
-        !fetchingData && leadStore.filteredLeads.length < 1 &&
+        !fetchingData && leadStore.leads.length < 1 &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant='titleMedium'>No data found!</Text>
-          <Button onPress={fetchData} icon="refresh">refetch</Button>
+          <Button onPress={fetchData} icon="refresh">refresh</Button>
         </View>
       }
     </Screen>

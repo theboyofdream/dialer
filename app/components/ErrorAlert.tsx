@@ -1,10 +1,11 @@
 import { observer } from "mobx-react-lite";
 import { useStores } from "../stores";
-import { Dialog, Portal, Text } from "react-native-paper";
+import { Dialog, Portal, Text, useTheme } from "react-native-paper";
 import { Button } from ".";
 
 export const ErrorAlert = observer(() => {
   const store = useStores().errorStore
+  const colors = useTheme().colors
 
   return (
     <>
@@ -12,6 +13,7 @@ export const ErrorAlert = observer(() => {
         store.getAll().map((error, index) =>
           <Portal key={index}>
             <Dialog visible={true} dismissable={false}>
+              {/* <Dialog.Icon icon='alert-circle' color={colors.primary} /> */}
               <Dialog.Title>{error.title}</Dialog.Title>
               <Dialog.Content>
                 <Text>{error.content}</Text>
