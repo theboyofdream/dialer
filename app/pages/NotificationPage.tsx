@@ -1,11 +1,11 @@
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 import { observer } from "mobx-react-lite";
-import { Button, Input, LeadListItem, Screen, Spacer, View } from "../components";
+import { Button, Input, LeadListItem, Screen, Spacer } from "../components";
 import { Lead, useStores } from "../stores";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Checkbox, IconButton, Text, TextInput, TouchableRipple, useTheme } from "react-native-paper";
-import { ButtonProps, RefreshControl, ScrollView, ToastAndroid } from "react-native";
+import { ButtonProps, RefreshControl, ScrollView, ToastAndroid, View } from "react-native";
 import { delay } from "../utils";
 import { clearNotification, handleNotificationPermission, setNotification } from '../services';
 import { FilterChip } from './LeadsPage';
@@ -15,25 +15,29 @@ type preFilters = 'all' | 'past' | 'upcoming'
 
 export const NotificationPage = observer(() => {
   const { colors, roundness } = useTheme()
-  const { leadStore, errorStore, notificationStore } = useStores()
+  const { errorStore, notificationStore } = useStores()
 
   const [notificationType, setNotificationType] = useState<preFilters>('upcoming')
 
-  const searchRef = useRef('')
+  // const searchRef = useRef('')
+  const [searchText, setSearchText] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
 
   function search() {
-    if (searchRef.current.length > 2) {
-      setSearchQuery(searchRef.current)
+    // if (searchRef.current.length > 2) {
+    // setSearchQuery(searchRef.current)
+    // }
+    if (searchText.length > 2) {
+      setSearchQuery(searchText)
     }
   }
   function onSearchTextChange(text: string) {
-    searchRef.current = text;
+    // searchRef.current = text;
+    setSearchText(text)
     if (text.length < 3) {
       setSearchQuery('')
     }
   }
-
   async function handleNotificationsRefresh() {
     let hasNotificationPermission = false;
     if (!hasNotificationPermission) {
@@ -114,28 +118,51 @@ export const NotificationPage = observer(() => {
             <Text style={{ color: colors.onSurfaceDisabled }}> Total</Text>
           </View>
         </View>
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}>
-          <View style={{ flex: 1 }}>
-            <Input
-              hideLabel
-              placeholder="Search by name/mobile"
-              onChangeText={onSearchTextChange}
-              right={
-                <TextInput.Icon
-                  icon="magnify"
-                  onPress={search}
-                  color={colors.onPrimary}
-                  style={{
-                    backgroundColor: colors.primary,
-                    borderRadius: roundness * 2.5,
-                    marginRight: 0,
-                  }}
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginVertical: 6,
+          }}
+        >
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: colors.elevation.level2,
+            borderRadius: roundness * 3,
+          }}>
+            <View style={{ flex: 1 }}>
+              <Input
+                hideLabel
+                placeholder="Search by name/mobile"
+                onChangeText={onSearchTextChange}
+                style={{ backgroundColor: colors.elevation.level2 }}
+                left={<TextInput.Icon icon='magnify' />}
+                value={searchText}
+                // right={<TextInput.Icon icon='close-circle' />}
+                returnKeyType='search'
+                onSubmitEditing={search}
+              />
+            </View>
+            <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+              {searchText.length > 0 &&
+                <IconButton
+                  icon='close-circle'
+                  onPress={() => onSearchTextChange('')}
                 />
               }
-            />
+              <Button
+                mode='contained'
+                children='search'
+                // children='clear'
+                style={{ minWidth: 0, marginRight: 6 }}
+                // labelStyle={{ marginHorizontal: 9 }}
+                // style={{ minWidth: 0, marginRight: 6, display: searchText.length > 3 ? 'flex' : 'none' }}
+                disabled={searchText.length < 3}
+                onPress={search}
+              // onPress={() => setSearchText('')}
+              />
+            </View>
           </View>
         </View>
 
@@ -148,7 +175,6 @@ export const NotificationPage = observer(() => {
           {
             (new Array('all', 'past', 'upcoming') as preFilters[]).map(item => {
               const active = notificationType === item;
-
               return (
                 <FilterChip
                   key={item}
@@ -156,55 +182,9 @@ export const NotificationPage = observer(() => {
                   active={active}
                   disabled={fetchingData}
                   onPress={() => setNotificationType(item)}
-                />
-                // <Button
-                //   style={{ minWidth: 0, gap: 10,bordr }}
-                //   labelStyle={{ marginVertical: 6 }}
-                //   mode={active ? 'contained-tonal' : 'text'}
-                //   compact
-                //   onPress={() => setNotificationType(item)}
-                // >
-                //   {active && <FeatherIcon name='check' size={18} />}
-                //   {item}
-                // </Button>
-                // <TouchableRipple onPress={() => setNotificationType(item)}>
-                //   <View style={{ flexDirection: 'row', gap: 4 }} key={item}>
-                //     <FeatherIcon name='check' size={18} />
-                //     <Text variant='bodyLarge'>{item}</Text>
-                //     <Text variant='labelSmall'>10</Text>
-                //   </View>
-                // </TouchableRipple>
-              )
-              // <FilterChip
-              //   key={item}
-              //   children={item}
-              //   active={notificationType === item}
-              //   disabled={fetchingData}
-              //   onPress={() => setNotificationType(item)}
-              // />
+                />)
             })
           }
-          {/* <FilterChip
-            key={'all'}
-            children={'all'}
-            active={notificationType === 'all'}
-            disabled={fetchingData}
-            onPress={() => setNotificationType('all')}
-          />
-          <FilterChip
-            key={'past'}
-            children={'past'}
-            active={notificationType === 'past'}
-            disabled={fetchingData}
-            onPress={() => setNotificationType('past')}
-          />
-          <FilterChip
-            key={'upcoming'}
-            children={'upcoming'}
-            active={notificationType === 'upcoming'}
-            disabled={fetchingData}
-            onPress={() => setNotificationType('upcoming')}
-          /> */}
         </ScrollView>
 
       </View>
@@ -213,6 +193,13 @@ export const NotificationPage = observer(() => {
         fetchingData &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant="titleMedium">Fetching Data...</Text>
+        </View>
+      }
+      {
+        !fetchingData && notificationStore.notifications.length < 1 &&
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text variant='titleMedium'>No data found!</Text>
+          <Button onPress={fetchData} icon="refresh">refresh</Button>
         </View>
       }
       {
@@ -279,13 +266,8 @@ export const NotificationPage = observer(() => {
           </ScrollView>
         </View>
       }
-      {
-        !fetchingData && notificationStore.notifications.length < 1 &&
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text variant='titleMedium'>No data found!</Text>
-          <Button onPress={fetchData} icon="refresh">refresh</Button>
-        </View>
-      }
+
+
     </Screen>
   )
 })

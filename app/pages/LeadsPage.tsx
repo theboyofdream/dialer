@@ -54,16 +54,21 @@ export const LeadsPage = observer(() => {
     setActivePreFilter(filterState.on ? null : 'follow-ups')
   }, [filterState.on])
 
-  const searchRef = useRef('')
+  // const searchRef = useRef('')
+  const [searchText, setSearchText] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
 
   function search() {
-    if (searchRef.current.length > 2) {
-      setSearchQuery(searchRef.current)
+    // if (searchRef.current.length > 2) {
+    // setSearchQuery(searchRef.current)
+    // }
+    if (searchText.length > 2) {
+      setSearchQuery(searchText)
     }
   }
   function onSearchTextChange(text: string) {
-    searchRef.current = text;
+    // searchRef.current = text;
+    setSearchText(text)
     if (text.length < 3) {
       setSearchQuery('')
     }
@@ -141,30 +146,46 @@ export const LeadsPage = observer(() => {
             <Text style={{ color: colors.onSurfaceDisabled }}> Total</Text>
           </View>
         </View>
+
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
+            marginVertical: 6,
           }}
         >
-          <View style={{ flex: 1 }}>
-            <Input
-              hideLabel
-              placeholder="Search by name/mobile"
-              onChangeText={onSearchTextChange}
-              right={
-                <TextInput.Icon
-                  icon="magnify"
-                  onPress={search}
-                  color={colors.onPrimary}
-                  style={{
-                    backgroundColor: colors.primary,
-                    borderRadius: roundness * 2.5,
-                    marginRight: 0,
-                  }}
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: colors.elevation.level2,
+            borderRadius: roundness * 3,
+          }}>
+            <View style={{ flex: 1 }}>
+              <Input
+                hideLabel
+                placeholder="Search by name/mobile"
+                onChangeText={onSearchTextChange}
+                style={{ backgroundColor: colors.elevation.level2 }}
+                left={<TextInput.Icon icon='magnify' />}
+                value={searchText}
+                returnKeyType='search'
+                onSubmitEditing={search}
+              />
+            </View>
+            <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+              {searchText.length > 0 &&
+                <IconButton
+                  icon='close-circle'
+                  onPress={() => onSearchTextChange('')}
                 />
               }
-            />
+              <Button
+                mode='contained'
+                children='search'
+                style={{ minWidth: 0, marginRight: 6 }}
+                disabled={searchText.length < 3}
+                onPress={search}
+              />
+            </View>
           </View>
         </View>
 
@@ -200,7 +221,7 @@ export const LeadsPage = observer(() => {
         !fetchingData && leadStore.leads.length < 1 &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant='titleMedium'>No data found!</Text>
-          <Button onPress={fetchData} icon="refresh">refetch</Button>
+          <Button onPress={fetchData} icon="refresh">refresh</Button>
         </View>
       }
       {
@@ -217,11 +238,11 @@ export const LeadsPage = observer(() => {
             {
               leadStore.leads.map((lead, index) => {
                 if (searchQuery.length > 2) {
-                  console.log(lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()),
-                    lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()),
-                    lead.mobile.toLowerCase().includes(searchQuery.toLowerCase()),
-                    { firstname: lead.firstname, lastname: lead.lastname, mobile: lead.mobile, searchQuery }
-                  )
+                  // console.log(lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()),
+                  //   lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()),
+                  //   lead.mobile.toLowerCase().includes(searchQuery.toLowerCase()),
+                  //   { firstname: lead.firstname, lastname: lead.lastname, mobile: lead.mobile, searchQuery }
+                  // )
                   if (
                     lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -239,7 +260,6 @@ export const LeadsPage = observer(() => {
           </ScrollView>
         </View>
       }
-
 
       <Button
         style={[

@@ -13,7 +13,7 @@ import { Sound, playSampleSound } from "react-native-notification-sounds";
 
 export const ProfilePage = observer(() => {
   const { authStore: { user, logout }, appInfoStore: { checkForUpdate, updateAvailable } } = useStores();
-  const { colors } = useTheme();
+  const { colors, roundness } = useTheme();
 
   const [notificationData, setNotificationData] = useState<{
     current: Sound;
@@ -29,45 +29,50 @@ export const ProfilePage = observer(() => {
 
   return (
     <Screen>
-      <View style={{ alignItems: 'center', gap: 12, paddingTop: 100 }}>
-        {user.loggedIn && user.pic ?
-          <Avatar.Image
-            size={120}
-            source={{ uri: user.pic }}
-          />
-          :
-          <Avatar.Icon
-            size={120}
-            icon={'account'}
-          />
-        }
-        <View style={{ alignItems: 'center' }}>
-          <Text variant="titleLarge">
-            {user.firstname} {user.lastname}
-          </Text>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceDisabled }}>User ID: #{user.userId}</Text>
-        </View>
-      </View>
-      <Spacer size={12} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ gap: 12 }}
       >
+        <View style={{ alignItems: 'center', gap: 12, paddingTop: 100 }}>
+          {user.loggedIn && user.pic ?
+            <Avatar.Image
+              size={120}
+              source={{ uri: user.pic }}
+            />
+            :
+            <Avatar.Icon
+              size={120}
+              icon={'account'}
+            />
+          }
+          <View style={{ alignItems: 'center' }}>
+            <Text variant="titleLarge">
+              {user.firstname} {user.lastname}
+            </Text>
+            <Text variant="bodySmall" style={{ color: colors.onSurfaceDisabled }}>User ID: #{user.userId}</Text>
+          </View>
+        </View>
+        <Spacer size={12} />
         <View style={{
-          backgroundColor: colors.elevation.level1,
-          padding: 12
+          backgroundColor: colors.elevation.level2,
+          padding: 12,
+          borderRadius: roundness * 3
         }}>
           <Text variant="bodyLarge" style={{ paddingLeft: 8 }}>Notification</Text>
           <Spacer size={8} />
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            paddingRight: 12
+            paddingRight: 12,
           }}>
-            <IconButton icon={"play"} mode="contained" onPress={() => {
-              notificationData &&
-                playSampleSound(notificationData.current)
-            }} />
+            <IconButton
+              icon={"play"}
+              style={{ backgroundColor: colors.primary }}
+              iconColor={colors.onPrimary}
+              onPress={() => {
+                notificationData &&
+                  playSampleSound(notificationData.current)
+              }} />
             <View style={{ flex: 1 }}>
               <Text>{notificationData?.current.title}</Text>
               <Text style={{ color: colors.onSurfaceDisabled }}>
@@ -132,9 +137,10 @@ export const ProfilePage = observer(() => {
         </Portal>
 
         <View style={{
-          backgroundColor: colors.elevation.level1,
+          backgroundColor: colors.elevation.level2,
           padding: 12,
           paddingLeft: 20,
+          borderRadius: roundness * 3
         }}>
           <Text variant="bodyLarge" >About App</Text>
           <Spacer size={8} />
@@ -149,9 +155,10 @@ export const ProfilePage = observer(() => {
         </View>
 
         <View style={{
-          backgroundColor: colors.elevation.level1,
+          backgroundColor: colors.elevation.level2,
           padding: 12,
           paddingLeft: 20,
+          borderRadius: roundness * 3
         }}>
           <Text variant="bodyLarge" >Credits</Text>
           <Spacer size={8} />

@@ -2,15 +2,17 @@ import { useNavigation } from "@react-navigation/native";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import { ToastAndroid, View } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { Screen, Spacer } from "../components";
 import { useStores } from "../stores";
 import { delay } from "../utils";
 import { clearNotification, handleNotificationPermission, setNotification } from "../services";
+import { appVersion } from "../stores/config";
 
 
 export const LoadingPage = observer(() => {
   const { navigate } = useNavigation()
+  const { colors } = useTheme()
   const stores = useStores()
 
   const [progress, setProgress] = useState(0)
@@ -107,15 +109,23 @@ export const LoadingPage = observer(() => {
 
   return (
     <Screen>
+      <View style={{ flex: 1, justifyContent: 'center', marginHorizontal: 24 }}>
+
+        {/* <Text variant='displayLarge'>DHWAJ</Text>
+        <Text variant='displaySmall'>Dialer</Text> */}
+
+      </View>
       <View style={{
-        flex: 1,
+        // flex: 1,
         marginBottom: 50,
+        gap: 10,
         justifyContent: 'flex-end',
         alignItems: 'center'
       }}>
 
         <View style={{
           padding: 30,
+          paddingBottom: 0,
           minWidth: 300,
           maxWidth: 400
         }}>
@@ -125,8 +135,13 @@ export const LoadingPage = observer(() => {
             <Spacer size={12} horizontal />
             <Text variant='labelLarge' children="Loading..." />
           </View>
-
         </View>
+
+        <View style={{ width: 200, height: 3, borderRadius: 3, backgroundColor: colors.elevation.level3 }}>
+          <View style={{ width: progress * 2, height: 3, borderRadius: 3, backgroundColor: colors.onSurfaceVariant }} />
+        </View>
+
+        <Text style={{ opacity: 0.6 }}>version {appVersion}</Text>
       </View>
     </Screen>
   )
