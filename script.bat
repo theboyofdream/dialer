@@ -5,7 +5,7 @@ if "%~1"=="save" (
   set time = time /t
   git add .
   git commit -m "bot: auto saving today's the progress. date- %date%, time-%time%"
-  git push --all
+  git push --all https://github.com/theboyofdream/dialer.git
 )
 
 

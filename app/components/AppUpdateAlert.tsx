@@ -97,7 +97,9 @@ export const AppUpdateAlert = observer(() => {
         <Dialog.Actions>
           {/* <Button disabled={updating} onPress={() => setVisible(false)}>skip</Button> */}
           {/* <Button mode="contained" disabled={updating} onPress={update}>update</Button> */}
-          <Button mode="contained" disabled={updating} onPress={openUpdateLinkInBrowser}>update</Button>
+          {/* <Button mode="contained-tonal" disabled={updating} onPress={openUpdateLinkInBrowser}>Open Browser</Button> */}
+          {/* <Button disabled={updating} onPress={openUpdateLinkInBrowser}>Open Browser</Button> */}
+          <Button mode="contained" disabled={updating} onPress={openUpdateLinkInBrowser}>Download</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

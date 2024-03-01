@@ -87,3 +87,7 @@ adb shell am start -W -a android.intent.action.VIEW -d dhwajdialer com.dialer
 
 
 
+https://thoughtbot.com/blog/implementing-deep-linking-in-react-native-a-quick-step-by-step-guide
+
+full screen notification
+https://notifee.app/react-native/docs/android/behaviour#full-screen

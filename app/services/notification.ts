@@ -1,5 +1,5 @@
-import notifee, { AndroidCategory, AndroidImportance, AndroidNotificationSetting, AndroidStyle, AuthorizationStatus, TimestampTrigger, TriggerType } from '@notifee/react-native';
-import { BackHandler, Platform } from 'react-native';
+import notifee, { AndroidCategory, AndroidImportance, AndroidLaunchActivityFlag, AndroidNotificationSetting, AndroidStyle, AuthorizationStatus, TimestampTrigger, TriggerType } from '@notifee/react-native';
+import { BackHandler, InteractionManager, Platform } from 'react-native';
 import NotificationSounds, { Sound } from 'react-native-notification-sounds';
 import { dateFns } from '../utils';
 import { localStorage } from '../stores/config';
@@ -83,8 +83,8 @@ type notificationParams = {
   leadId: number,
   fullName: string,
   remarks: string,
-  notificationDate: Date
-
+  notificationDate: Date,
+  mobile: string,
 }
 export async function setNotification(params: notificationParams) {
   if (params.notificationDate.getTime() < (new Date()).getTime()) {
@@ -121,14 +121,28 @@ export async function setNotification(params: notificationParams) {
         channelId: notificationChannel,
         category: AndroidCategory.REMINDER,
         showTimestamp: true,
-        style: { type: AndroidStyle.BIGTEXT, text: `<i style="opacity:0.5;">remarks:</i> ${params.remarks}<br><i style="opacity:0.5;">Follow up at</i> ${dateFns.toHumanReadleDate(new Date(datetime))}` },
+        style: { type: AndroidStyle.BIGTEXT, text: `<i>remarks:</i> ${params.remarks}<br><i style="opacity:0.5;">Follow up at</i> ${dateFns.toHumanReadleDate(new Date(datetime))}` },
         autoCancel: false,
         pressAction: { id: 'default' },
-        fullScreenAction: {
-          id: 'default',
-        },
+        // actions: [
+        //   {
+        //     title: '<button>Call now</button>',
+        //     pressAction: {
+        //       id: 'call-now',
+        //       launchActivity: 'default'
+        //       // launchActivity: 'com.android.server.telecom',
+        //       // launchActivityFlags: [AndroidLaunchActivityFlag]
+        //     }
+        //     // launchActivity: 'com.android.server.telecom/tel:9321420119'
+        //   }
+        // ],
+        // https://notifee.app/react-native/docs/android/behaviour#full-screen
+        // fullScreenAction: {
+        //   id: 'default',
+        // },
         sound: sound.title
-      }
+      },
+      data: params,
     }, notificationTrigger)
   })
 }

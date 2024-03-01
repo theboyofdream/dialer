@@ -77,19 +77,25 @@ export const LoadingPage = observer(() => {
         })
     }
     hasNotificationPermission && await clearNotification()
-    for (let notification of stores.notificationStore.notifications) {
+    for (let notification of stores.notificationStore.upcomingNotifications) {
       if (!hasNotificationPermission) { break }
-      if (notification.followUpDate) {
+      if (
+        notification.followUpDate &&
+        notification.followUpDate.getTime() > new Date().getTime()
+      ) {
         setNotification({
           leadId: notification.id,
           fullName: notification.firstname + ' ' + notification.lastname,
           remarks: notification.remarks,
-          notificationDate: notification.followUpDate
+          notificationDate: notification.followUpDate,
+          // notificationDate: new Date(new Date().getTime() + 30000),
+          mobile: notification.mobile
         })
+        // break;
       }
     }
     hasNotificationPermission &&
-      ToastAndroid.show(`${stores.notificationStore.upcomingCount} notifications set`, ToastAndroid.SHORT)
+      ToastAndroid.show(`${stores.notificationStore.upcomingNotifications.length} notifications set`, ToastAndroid.SHORT)
 
     await updateProgress()
 

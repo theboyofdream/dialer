@@ -20,7 +20,7 @@ const PreDefinedFilters: fetchTypes["type"][] = [
   "interested-leads",
 ];
 
-function FilterChip({ active, ...props }: { active: boolean } & ChipProps) {
+export function FilterChip({ active, ...props }: { active: boolean } & ChipProps) {
   const { colors } = useTheme()
   props = {
     ...props,
@@ -110,8 +110,8 @@ export const LeadsPage = observer(() => {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 6,
-        paddingBottom: 0,
+        padding: 12,
+        // paddingBottom: 0,
         paddingLeft: 10,
       }}>
         <Text variant='titleLarge'>Leads</Text>
@@ -133,8 +133,9 @@ export const LeadsPage = observer(() => {
       </View>
 
 
-      <View style={{ margin: 6, marginTop: 3 }}>
-        <View style={{ flexDirection: 'row', marginHorizontal: 6, justifyContent: 'flex-end' }}>
+      {/* <View style={{ margin: 6, marginTop: 3 }}> */}
+      <View style={{ marginHorizontal: 6, paddingBottom: 6 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
           <View style={{ flexDirection: 'row' }}>
             <Text variant='titleSmall'>{leadStore.count}</Text>
             <Text style={{ color: colors.onSurfaceDisabled }}> Total</Text>

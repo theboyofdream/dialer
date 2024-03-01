@@ -14,8 +14,7 @@ export class NotificationStore {
   private authStore: AuthStore;
   notificationsObj: { [key: number]: Lead } = {}
   notifications: Lead[] = []
-  totalCount: number = 0
-  upcomingCount = 0
+  count: number = 0
 
   constructor(authStore: AuthStore) {
     this.authStore = authStore;
@@ -50,24 +49,32 @@ export class NotificationStore {
     runInAction(() => {
       this.notificationsObj = { ...this.notificationsObj, ...obj };
       this.notifications = arr;
-      this.totalCount = count
-      count = 0;
-      arr.map(l =>
-        l.followUpDate &&
-        l.followUpDate.getTime() > (new Date()).getTime() &&
-        count++
-      )
-      this.upcomingCount = count
+      this.count = count
     })
 
     return { error, message }
   }
 
+  get pastNotifications() {
+    return this.notifications
+      .filter(({ followUpDate }) =>
+        followUpDate &&
+        followUpDate.getTime() < (new Date()).getTime()
+      )
+  }
+
+  get upcomingNotifications() {
+    return this.notifications
+      .filter(({ followUpDate }) =>
+        followUpDate &&
+        followUpDate.getTime() > (new Date()).getTime()
+      )
+  }
+
   clear() {
     this.notifications = []
     this.notificationsObj = {}
-    this.totalCount = 0
-    this.upcomingCount = 0
+    this.count = 0
   }
 }
 

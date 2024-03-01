@@ -47,9 +47,9 @@ type LeadDetailsPageProps = NativeStackScreenProps<StackNavigatorParams, 'lead d
 export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
   const { leadStore, dispositionStore, statusStore, projectStore, typologyStore, leadSourceStore, errorStore } = useStores()
   const { colors } = useTheme()
+  const { canGoBack, goBack, navigate } = props.navigation;
 
   function handleBack() {
-    const { canGoBack, goBack, navigate } = props.navigation;
     canGoBack() ? goBack() : navigate('home')
   }
 
@@ -176,7 +176,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                   validateOnMount={true}
                   // children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting, dirty, touched }) => (
                   children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting }) => {
-                    console.log({ isValid, errors, values })
+                    // console.log({ isValid, errors, values })
 
                     return (<View style={{ flex: 1 }}>
                       <ScrollView showsVerticalScrollIndicator={false}>

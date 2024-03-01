@@ -1,20 +1,23 @@
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 import { observer } from "mobx-react-lite";
-import { Input, LeadListItem, Screen, Spacer, View } from "../components";
+import { Button, Input, LeadListItem, Screen, Spacer, View } from "../components";
 import { Lead, useStores } from "../stores";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, IconButton, Text, TextInput, useTheme } from "react-native-paper";
-import { RefreshControl, ScrollView, ToastAndroid } from "react-native";
+import { Checkbox, IconButton, Text, TextInput, TouchableRipple, useTheme } from "react-native-paper";
+import { ButtonProps, RefreshControl, ScrollView, ToastAndroid } from "react-native";
 import { delay } from "../utils";
-import { useNavigation } from '@react-navigation/native';
 import { clearNotification, handleNotificationPermission, setNotification } from '../services';
+import { FilterChip } from './LeadsPage';
 
+type preFilters = 'all' | 'past' | 'upcoming'
+// const preFilters = ['all', 'past', 'upcoming']
 
 export const NotificationPage = observer(() => {
-  const { canGoBack, goBack, navigate } = useNavigation();
   const { colors, roundness } = useTheme()
   const { leadStore, errorStore, notificationStore } = useStores()
+
+  const [notificationType, setNotificationType] = useState<preFilters>('upcoming')
 
   const searchRef = useRef('')
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,25 +51,29 @@ export const NotificationPage = observer(() => {
         })
     }
     hasNotificationPermission && await clearNotification()
-    for (let notification of notificationStore.notifications) {
+    for (let notification of notificationStore.upcomingNotifications) {
       if (!hasNotificationPermission) { break }
-      if (notification.followUpDate) {
+      if (
+        notification.followUpDate &&
+        notification.followUpDate.getTime() > new Date().getTime()
+      ) {
         setNotification({
           leadId: notification.id,
           fullName: notification.firstname + ' ' + notification.lastname,
           remarks: notification.remarks,
-          // notificationDate: notification.followUpDate
-          notificationDate: new Date(new Date().getTime() + 30000)
+          notificationDate: notification.followUpDate,
+          // notificationDate: new Date(new Date().getTime() + 30000),
+          mobile: notification.mobile
         })
-        break;
+        // break;
       }
     }
     hasNotificationPermission &&
-      ToastAndroid.show(`${notificationStore.upcomingCount} notifications set`, ToastAndroid.SHORT)
+      ToastAndroid.show(`${notificationStore.upcomingNotifications.length} notifications set`, ToastAndroid.SHORT)
 
   }
   useEffect(() => {
-    notificationStore.upcomingCount > 0 && handleNotificationsRefresh()
+    notificationStore.upcomingNotifications.length > 0 && handleNotificationsRefresh()
   }, [notificationStore.notifications])
 
   const [fetchingData, setFetchingData] = useState(false)
@@ -92,14 +99,18 @@ export const NotificationPage = observer(() => {
 
       <Text variant='titleLarge' style={{ padding: 12, paddingLeft: 10 }}>Notifications</Text>
 
-      <View style={{ marginHorizontal: 6 }}>
+      <View style={{ marginHorizontal: 6, paddingBottom: 6 }}>
         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
           <View style={{ flexDirection: 'row' }}>
-            <Text variant='titleSmall'>{notificationStore.upcomingCount}</Text>
-            <Text style={{ color: colors.onSurfaceDisabled }}> Upcoming Notifications</Text>
+            <Text variant='titleSmall'>
+              {notificationType === 'all' && notificationStore.notifications.length}
+              {notificationType === 'past' && notificationStore.pastNotifications.length}
+              {notificationType === 'upcoming' && notificationStore.upcomingNotifications.length}
+            </Text>
+            <Text style={{ color: colors.onSurfaceDisabled }}> Count</Text>
           </View>
           <View style={{ flexDirection: 'row' }}>
-            <Text variant='titleSmall'>{notificationStore.totalCount}</Text>
+            <Text variant='titleSmall'>{notificationStore.notifications.length}</Text>
             <Text style={{ color: colors.onSurfaceDisabled }}> Total</Text>
           </View>
         </View>
@@ -127,6 +138,75 @@ export const NotificationPage = observer(() => {
             />
           </View>
         </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flexDirection: 'row' }}
+          contentContainerStyle={{ gap: 6 }}
+        >
+          {
+            (new Array('all', 'past', 'upcoming') as preFilters[]).map(item => {
+              const active = notificationType === item;
+
+              return (
+                <FilterChip
+                  key={item}
+                  children={item}
+                  active={active}
+                  disabled={fetchingData}
+                  onPress={() => setNotificationType(item)}
+                />
+                // <Button
+                //   style={{ minWidth: 0, gap: 10,bordr }}
+                //   labelStyle={{ marginVertical: 6 }}
+                //   mode={active ? 'contained-tonal' : 'text'}
+                //   compact
+                //   onPress={() => setNotificationType(item)}
+                // >
+                //   {active && <FeatherIcon name='check' size={18} />}
+                //   {item}
+                // </Button>
+                // <TouchableRipple onPress={() => setNotificationType(item)}>
+                //   <View style={{ flexDirection: 'row', gap: 4 }} key={item}>
+                //     <FeatherIcon name='check' size={18} />
+                //     <Text variant='bodyLarge'>{item}</Text>
+                //     <Text variant='labelSmall'>10</Text>
+                //   </View>
+                // </TouchableRipple>
+              )
+              // <FilterChip
+              //   key={item}
+              //   children={item}
+              //   active={notificationType === item}
+              //   disabled={fetchingData}
+              //   onPress={() => setNotificationType(item)}
+              // />
+            })
+          }
+          {/* <FilterChip
+            key={'all'}
+            children={'all'}
+            active={notificationType === 'all'}
+            disabled={fetchingData}
+            onPress={() => setNotificationType('all')}
+          />
+          <FilterChip
+            key={'past'}
+            children={'past'}
+            active={notificationType === 'past'}
+            disabled={fetchingData}
+            onPress={() => setNotificationType('past')}
+          />
+          <FilterChip
+            key={'upcoming'}
+            children={'upcoming'}
+            active={notificationType === 'upcoming'}
+            disabled={fetchingData}
+            onPress={() => setNotificationType('upcoming')}
+          /> */}
+        </ScrollView>
+
       </View>
 
       {
@@ -147,6 +227,7 @@ export const NotificationPage = observer(() => {
             }
           >
             {
+              notificationType === 'all' &&
               notificationStore.notifications.map((lead, index) => {
                 if (searchQuery.length > 2) {
                   if (
@@ -162,12 +243,44 @@ export const NotificationPage = observer(() => {
                 return <LeadListItem key={index} leadId={lead.id} />
               })
             }
+            {
+              notificationType === 'past' &&
+              notificationStore.pastNotifications.map((lead, index) => {
+                if (searchQuery.length > 2) {
+                  if (
+                    lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.mobile.toLowerCase().includes(searchQuery.toLowerCase())
+                  ) {
+                    return <LeadListItem key={index} leadId={lead.id} />
+                  }
+                  return undefined
+                }
+                return <LeadListItem key={index} leadId={lead.id} />
+              })
+            }
+            {
+              notificationType === 'upcoming' &&
+              notificationStore.upcomingNotifications.map((lead, index) => {
+                if (searchQuery.length > 2) {
+                  if (
+                    lead.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.lastname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    lead.mobile.toLowerCase().includes(searchQuery.toLowerCase())
+                  ) {
+                    return <LeadListItem key={index} leadId={lead.id} />
+                  }
+                  return undefined
+                }
+                return <LeadListItem key={index} leadId={lead.id} />
+              })
+            }
             <Spacer size={50} />
           </ScrollView>
         </View>
       }
       {
-        !fetchingData && leadStore.leads.length < 1 &&
+        !fetchingData && notificationStore.notifications.length < 1 &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant='titleMedium'>No data found!</Text>
           <Button onPress={fetchData} icon="refresh">refresh</Button>

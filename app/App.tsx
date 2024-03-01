@@ -14,19 +14,22 @@ configure({
 })
 
 import notifee, { EventType } from '@notifee/react-native';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigation } from './Navigation';
-import { AppUpdateAlert, ErrorAlert } from './components';
+import { AppUpdateAlert, ErrorAlert, InAppNotificationAlert } from './components';
 import { removeNotification } from './services';
 import { RootStoreProvider, rootStore } from './stores';
 import { theme } from './utils';
+import { NavigationAction, createNavigationContainerRef } from '@react-navigation/native';
+import { useLinkTo } from '@react-navigation/native';
+import { Linking } from 'react-native';
 
 
 notifee.onBackgroundEvent(async ({ type, detail }) => {
-  const { notification, pressAction } = detail;
+  const { notification } = detail;
   if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
-    if (notification) {
-      notification
+    if (notification && notification.data) {
+      Linking.openURL(`dhwajdialer://lead/${notification.data.leadId}`)
     }
   }
 });
@@ -34,40 +37,33 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
 
 export default function App() {
 
-  async function init() {
-    // listNotificationSounds()
-  }
-
   useEffect(function () {
-    init()
+
     const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      const { notification } = detail
       switch (type) {
         case EventType.PRESS:
-          if (detail && detail.notification && detail.notification.id) {
-            console.log(detail)
-            removeNotification(detail.notification?.id)
+        case EventType.ACTION_PRESS:
+          if (notification && notification.id && notification.data) {
+            Linking.openURL(`dhwajdialer://lead/${notification.data.leadId}`)
+            removeNotification(notification.id)
           }
           break;
       }
     });
-    return () => {
-      unsubscribe()
-    };
+
+    return unsubscribe();
+
   }, []);
 
   return (
-    // <PaperProvider theme={theme}>
-    // <PaperProvider theme={{
-    //   ...MD3Colors,
-    //   // mode: 'exact',
-    //   // roundness: 0,
-    //   // fonts: customFonts
-    // }}>
     <PaperProvider>
       <RootStoreProvider value={rootStore}>
-        <AppUpdateAlert />
-        <ErrorAlert />
-        <Navigation />
+        <Navigation>
+          <AppUpdateAlert />
+          <ErrorAlert />
+          <InAppNotificationAlert />
+        </Navigation>
       </RootStoreProvider>
     </PaperProvider>
   )

@@ -9,9 +9,10 @@ import { ColorValue, Pressable, View } from "react-native";
 import { Badge, Text, useTheme } from "react-native-paper";
 
 import { observer } from 'mobx-react-lite';
-import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotificationPage, ReportPage } from "./pages";
+import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotFoundPage, NotificationPage, ReportPage } from "./pages";
 import { ProfilePage } from './pages/ProfilePage';
 import { useStores } from './stores';
+import { PropsWithChildren } from 'react';
 
 
 const defaultScreenOptions = { headerShown: false }
@@ -22,7 +23,8 @@ export type StackNavigatorParams = {
   home: undefined,
   "lead details": { leadId: number },
   // notifications: undefined,
-  login: undefined
+  login: undefined,
+  '404': undefined
 }
 
 const Stack = createStackNavigator<StackNavigatorParams>()
@@ -37,6 +39,7 @@ const StackNavigator = observer(() => {
             <Stack.Screen name='loading' component={LoadingPage} />
             <Stack.Screen name='home' component={BottomTabNavigator} />
             <Stack.Screen name='lead details' component={LeadDetailPage} />
+            <Stack.Screen name='404' component={NotFoundPage} />
             {/* <Stack.Screen name='notifications' component={NotificationPage} /> */}
           </>
           :
@@ -71,7 +74,7 @@ type BottomTabNavigatorParams = {
 const Tab = createBottomTabNavigator<BottomTabNavigatorParams>();
 const BottomTabNavigator = observer(() => {
   const { colors } = useTheme()
-  const { upcomingCount } = useStores().notificationStore
+  const upcomingNotificationCount = useStores().notificationStore.upcomingNotifications.length
 
   return (
     <Tab.Navigator
@@ -113,7 +116,7 @@ const BottomTabNavigator = observer(() => {
                     }}
                     onPress={onPress}
                   >
-                    {upcomingCount > 0 && route.name === 'alerts' &&
+                    {upcomingNotificationCount > 0 && route.name === 'alerts' &&
                       <Badge style={{
                         position: 'absolute',
                         top: 0,
@@ -124,7 +127,7 @@ const BottomTabNavigator = observer(() => {
                           { translateY: -5 }
                         ]
                       }}
-                      >{upcomingCount}</Badge>
+                      >{upcomingNotificationCount}</Badge>
                     }
                     {generateBottomTabIcon(route.name, color)}
                     <Text variant='bodySmall' style={{ color, textTransform: 'capitalize' }}>
@@ -149,10 +152,48 @@ const BottomTabNavigator = observer(() => {
 })
 
 
-export function Navigation() {
+/**
+ * Linking Configuration
+ */
+const linking = {
+  // Prefixes accepted by the navigation container, should match the added schemes
+  prefixes: ["dhwajdialer://"],
+  // Route config to map uri paths to screens
+  config: {
+    // Initial route name to be added to the stack before any further navigation,
+    // should match one of the available screens
+    initialRouteName: "loading" as const,
+    screens: {
+      // dhwajdialer:// -> LoadingPage
+      loading: "/",
+      // dhwajdialer://lead/1 -> LeadDetailsPage with param leadId: 1
+      "lead details": "lead/:leadId"
+    },
+
+  },
+};
+
+export function Navigation(props: PropsWithChildren) {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={{
+      // Prefixes accepted by the navigation container, should match the added schemes
+      prefixes: ["dhwajdialer://"],
+      // Route config to map uri paths to screens
+      config: {
+        // Initial route name to be added to the stack before any further navigation,
+        // should match one of the available screens
+        initialRouteName: "loading" as const,
+        screens: {
+          // dhwajdialer:// -> LoadingPage
+          loading: "/",
+          // dhwajdialer://lead/1 -> LeadDetailsPage with param leadId: 1
+          "lead details": "lead/:leadId",
+          '404': '/*'
+        },
+      },
+    }}>
       <StackNavigator />
+      {props.children}
     </NavigationContainer>
   )
 }
