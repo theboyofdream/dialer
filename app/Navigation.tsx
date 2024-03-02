@@ -9,7 +9,7 @@ import { ColorValue, Pressable, View } from "react-native";
 import { Badge, Text, useTheme } from "react-native-paper";
 
 import { observer } from 'mobx-react-lite';
-import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotFoundPage, NotificationPage, ReportPage } from "./pages";
+import { CreateLeadPage, LeadDetailPage, LeadsPage, LoadingPage, LoginPage, NotFoundPage, NotificationPage, PermissionPage, ReportPage } from "./pages";
 import { ProfilePage } from './pages/ProfilePage';
 import { useStores } from './stores';
 import { PropsWithChildren } from 'react';
@@ -24,6 +24,7 @@ export type StackNavigatorParams = {
   "lead details": { leadId: number },
   // notifications: undefined,
   login: undefined,
+  permission: undefined,
   '404': undefined
 }
 
@@ -36,6 +37,7 @@ const StackNavigator = observer(() => {
       {
         user.loggedIn ?
           <>
+            <Stack.Screen name='permission' component={PermissionPage} />
             <Stack.Screen name='loading' component={LoadingPage} />
             <Stack.Screen name='home' component={BottomTabNavigator} />
             <Stack.Screen name='lead details' component={LeadDetailPage} />

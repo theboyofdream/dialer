@@ -11,7 +11,7 @@ export async function handleNotificationPermission() {
 
   if (
     Platform.OS === 'android' &&
-    Platform.Version > 30 &&
+    Platform.Version >= 30 &&
     await notifee.isBatteryOptimizationEnabled()
   ) {
     errorCategory = 'battery'

@@ -24,7 +24,7 @@ let defaultValues = {
 if (__DEV__) {
   defaultValues = {
     email: 'inam@dhwajpartner.com',
-    password: 'inam@12'
+    password: 'inam@123'
   }
 }
 
@@ -33,18 +33,27 @@ export const LoginPage = observer(() => {
   const { authStore, errorStore } = useStores()
   const { colors } = useTheme();
   const [isPasswordVisible, setPasswordVisibility] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
 
   return (
     <Screen style={styles.screen}>
       <Formik
         initialValues={defaultValues}
         validationSchema={loginSchema}
-        children={({ handleChange, handleBlur, handleSubmit, setFieldValue, errors, values, touched, isValid, dirty }) => (
+        children={({ handleChange, handleBlur, handleSubmit, setFieldValue, errors, values, isSubmitting, isValid }) => (
           <View style={styles.form}>
-            <Text variant="displayMedium">Login</Text>
+            <Text variant='displayMedium'>DHWAJ</Text>
+            <Text variant='titleLarge'>DIALER</Text>
 
-            <Spacer size={15} />
+            <Spacer size={30} />
+
+            <View style={{ alignItems: 'center', flexDirection: 'row', gap: 4 }}>
+              <Text variant='titleLarge'>
+                L<Text variant='titleMedium'>ogin</Text>
+              </Text>
+              <Text style={{ opacity: 0.5 }}> to continue</Text>
+            </View>
+
+            <Spacer size={4} />
 
             <Input
               label="Email ID"
@@ -56,7 +65,7 @@ export const LoginPage = observer(() => {
               }}
               onBlur={handleBlur('email')}
               value={values.email.toLowerCase()}
-              errorText={touched.email && errors.email ? errors.email : undefined}
+              errorText={errors.email}
             />
 
             <Input
@@ -66,10 +75,10 @@ export const LoginPage = observer(() => {
               onBlur={handleBlur('password')}
               value={values.password}
               secureTextEntry={!isPasswordVisible}
-              errorText={touched.password && errors.password ? errors.password : undefined}
+              errorText={errors.password}
               right={
                 <TextInput.Icon
-                  color={touched.password && errors.password ? colors.error : colors.primary}
+                  color={errors.password ? colors.error : colors.primary}
                   icon={isPasswordVisible ? 'eye' : 'eye-off'}
                   onPress={() => setPasswordVisibility(!isPasswordVisible)}
                 />
@@ -81,12 +90,12 @@ export const LoginPage = observer(() => {
               mode="contained"
               onPress={() => handleSubmit()}
               style={styles.submitBtn}
-              disabled={submitting || !(isValid && dirty)}
-              children="login"
+              disabled={isSubmitting || !isValid}
+              children={isSubmitting ? "submitting..." : "login"}
             />
           </View>
         )}
-        onSubmit={async ({ email, password }) => {
+        onSubmit={async ({ email, password }, { setSubmitting }) => {
           setSubmitting(true);
           await authStore.login({ email, password })
             .then(({ error, message }) => {
