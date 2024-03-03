@@ -24,7 +24,7 @@ export type StackNavigatorParams = {
   "lead details": { leadId: number },
   // notifications: undefined,
   login: undefined,
-  permission: undefined,
+  // permission: undefined,
   '404': undefined
 }
 
@@ -37,7 +37,7 @@ const StackNavigator = observer(() => {
       {
         user.loggedIn ?
           <>
-            <Stack.Screen name='permission' component={PermissionPage} />
+            {/* <Stack.Screen name='permission' component={PermissionPage} /> */}
             <Stack.Screen name='loading' component={LoadingPage} />
             <Stack.Screen name='home' component={BottomTabNavigator} />
             <Stack.Screen name='lead details' component={LeadDetailPage} />

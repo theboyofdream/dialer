@@ -7,7 +7,7 @@ export const
 
   baseUri = "https://sahikarma.com/api/dialer/v2",
   timeout = 12000,
-  appVersion = 1.03,
+  appVersion = 1.030,
 
   appInfo = {
     appVersion,

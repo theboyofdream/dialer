@@ -178,7 +178,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                   children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting }) => {
                     // console.log({ isValid, errors, values })
 
-                    return (<View style={{ flex: 1 }}>
+                    return (<View style={{ flex: 1, }}>
                       <ScrollView showsVerticalScrollIndicator={false}>
 
                         <Input
@@ -280,6 +280,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                         />
 
                         <Dropdown
+
                           data={statusStore.statusArray}
                           initialValue={[values.statusId]}
                           refresh={statusStore.fetch}
@@ -356,6 +357,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                           // errorText={touched.projectIds && errors.projectIds ? "Invalid value" : undefined}
                           errorText={errors.projectIds ? "Invalid value" : undefined}
                           required
+                          enableSearch
                         />
 
                         <Dropdown
@@ -417,22 +419,21 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                   }}
                   onSubmit={async (form, { setSubmitting }) => {
                     setSubmitting(true)
-                    await leadStore.updateLead(form)
-                      .then(({ error, message }) => {
-                        if (error) {
-                          runInAction(() =>
-                            errorStore.add({
-                              id: `update-lead`,
-                              title: `Error - update lead`,
-                              content: `Unable to update lead. Try again.\n\nerror message:\n${message}`
-                            })
-                          )
-                          return
-                        }
-                      })
+                    let { error, message } = await leadStore.updateLead(form)
+                    if (error) {
+                      runInAction(() =>
+                        errorStore.add({
+                          id: `update-lead`,
+                          title: `Error - update lead`,
+                          content: `Unable to update lead. Try again.\n\nerror message:\n${message}`
+                        })
+                      )
+                    }
                     setSubmitting(false)
-                    await delay(500)
-                    handleBack()
+                    if (!error) {
+                      await delay(500)
+                      handleBack()
+                    }
                   }}
                 />
               </View>
@@ -481,6 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 24
   },
   form: {
     minWidth: 350,
@@ -596,6 +598,8 @@ const History = observer(({ id, visible, setVisibility }: { id: number | undefin
         icon="close"
         children="close"
         mode="contained"
+        style={{ alignSelf: 'center', backgroundColor: colors.errorContainer }}
+        labelStyle={{ color: colors.onErrorContainer }}
         onPress={() => setVisibility(false)}
       />
     </View>

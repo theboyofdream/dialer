@@ -4,7 +4,7 @@ import { Dialog, Portal, Text, useTheme } from "react-native-paper";
 import { Button } from ".";
 
 export const ErrorAlert = observer(() => {
-  const store = useStores().errorStore
+  const store = useStores().errorStore;
   const colors = useTheme().colors
 
   return (
@@ -23,6 +23,14 @@ export const ErrorAlert = observer(() => {
                   children="skip"
                   onPress={() => store.remove(error.id)}
                 />
+                {
+                  error.action &&
+                  <Button
+                    mode='contained'
+                    children={error.action.label}
+                    onPress={error.action.onPress}
+                  />
+                }
                 {/* <Button
                   mode='contained'
                   icon='share'

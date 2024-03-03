@@ -5,15 +5,21 @@ if "%~1"=="save" (
   set time = time /t
   git add .
   git commit -m "bot: auto saving today's the progress. date- %date%, time-%time%"
-  git push --all https://github.com/theboyofdream/dialer.git
 )
 
 
-if "%~1"=="restore" (
-  git pull
+if "%~1"=="pull" (
+  git pull https://github.com/theboyofdream/dialer.git
   yarn install
 )
 
+if "%~1"=="push" (
+  set date = date /t
+  set time = time /t
+  git add .
+  git commit -m "bot: auto saving today's the progress. date- %date%, time-%time%"
+  git push --all https://github.com/theboyofdream/dialer.git
+)
 
 
 :: Cleans the android gradle

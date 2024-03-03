@@ -4,6 +4,10 @@ type Error = {
   id: string,
   title: string,
   content: string,
+  action?: {
+    label: string,
+    onPress: () => void
+  }
 }
 
 export class ErrorStore {

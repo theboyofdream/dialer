@@ -327,9 +327,15 @@ export class LeadStore {
 
     await axiosInterceptor
       .postForm(Urls['create'], {
-        ...lead,
         user_id: this.authStore.user.userId,
         franchise_id: this.authStore.user.franchiseId,
+        first_name: lead.firstname,
+        last_name: lead.lastname,
+        lead_email: lead.email,
+        lead_mobile: lead.mobile,
+        source_id: lead.sourceId,
+        status_id: lead.statusId,
+        project_id: lead.projectIds.join(',')
       })
       .then(response => {
         const data = response.data as ApiResponse<undefined>

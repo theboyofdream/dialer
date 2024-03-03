@@ -1,4 +1,18 @@
-## SETUP
+= SETUP
+
+== Libraries
+
+[cols="1,1,1"]
+|===
+| NAME
+| LINK
+| REFS
+
+| react native paper
+| https://callstack.github.io/react-native-paper/docs/guides/getting-started[open]
+
+
+|===
 
 UI:
 [react native paper](https://callstack.github.io/react-native-paper/docs/guides/getting-started)
@@ -91,3 +105,6 @@ https://thoughtbot.com/blog/implementing-deep-linking-in-react-native-a-quick-st
 
 full screen notification
 https://notifee.app/react-native/docs/android/behaviour#full-screen
+
+
+yarn add @isudaji/react-native-install-apk

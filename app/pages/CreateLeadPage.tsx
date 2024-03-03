@@ -60,7 +60,7 @@ export const CreateLeadPage = observer(() => {
                 <Spacer size={12} />
 
                 <Input
-                  placeholder='First name'
+                  placeholder="First name"
                   onChangeText={handleChange('firstname')}
                   onBlur={handleBlur('firstname')}
                   value={values.firstname}
@@ -69,7 +69,7 @@ export const CreateLeadPage = observer(() => {
                 />
 
                 <Input
-                  placeholder='Last name'
+                  placeholder="Last name"
                   onChangeText={handleChange('lastname')}
                   onBlur={handleBlur('lastname')}
                   value={values.lastname}
@@ -78,7 +78,7 @@ export const CreateLeadPage = observer(() => {
                 />
 
                 <Input
-                  placeholder='Email ID'
+                  placeholder="Email ID"
                   onChangeText={(mail) => {
                     setFieldValue('email', mail.toLowerCase())
                     handleChange('email')
@@ -90,7 +90,7 @@ export const CreateLeadPage = observer(() => {
                 />
 
                 <Input
-                  placeholder='Mobile Number'
+                  placeholder="Mobile Number"
                   onChangeText={handleChange('mobile')}
                   onBlur={handleBlur('mobile')}
                   value={values.mobile}
@@ -103,7 +103,7 @@ export const CreateLeadPage = observer(() => {
                   data={statusStore.statusArray}
                   initialValue={[]}
                   refresh={statusStore.fetch}
-                  placeholder='Status'
+                  placeholder="Status"
                   onHide={(v) => {
                     setFieldValue('statusId', v[0])
                     handleBlur('statusId')
@@ -129,7 +129,7 @@ export const CreateLeadPage = observer(() => {
                   data={projectStore.projectArray}
                   initialValue={[]}
                   refresh={projectStore.fetch}
-                  placeholder='Projects'
+                  placeholder="Projects"
                   onHide={(v) => {
                     setFieldValue('projectIds', v)
                     handleBlur('projectIds')
@@ -155,7 +155,7 @@ export const CreateLeadPage = observer(() => {
                   data={leadSourceStore.leadSources}
                   initialValue={[]}
                   refresh={leadSourceStore.fetch}
-                  placeholder='Lead Source'
+                  placeholder="Lead Source"
                   onHide={(v) => {
                     setFieldValue('sourceId', v[0])
                     handleBlur('sourceId')

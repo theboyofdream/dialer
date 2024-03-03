@@ -1,14 +1,13 @@
-import { Linking, ScrollView, ToastAndroid, View } from "react-native";
-import { Avatar, Dialog, IconButton, List, Portal, RadioButton, Text, TouchableRipple, useTheme } from "react-native-paper";
-import { Button, Screen, Spacer } from "../components";
-import { useStores } from "../stores";
-import { observer } from "mobx-react-lite";
-import { Formik } from "formik";
-import SendIntentAndroid from "react-native-send-intent";
-import { appInfo } from "../stores/config";
-import { useEffect, useMemo, useState } from "react";
-import { getNotificationSounds, setNotificationSound } from "../services";
-import { Sound, playSampleSound } from "react-native-notification-sounds";
+import { Linking, ScrollView, ToastAndroid, View } from 'react-native';
+import { Avatar, Dialog, IconButton, Portal, RadioButton, Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Button, Screen, Spacer } from '../components';
+import { useStores } from '../stores';
+import { observer } from 'mobx-react-lite';
+import { Formik } from 'formik';
+import { appInfo } from '../stores/config';
+import { useEffect, useState } from 'react';
+import { getNotificationSounds, setNotificationSound } from '../services';
+import { Sound, playSampleSound } from 'react-native-notification-sounds';
 
 
 export const ProfilePage = observer(() => {
@@ -18,14 +17,14 @@ export const ProfilePage = observer(() => {
   const [notificationData, setNotificationData] = useState<{
     current: Sound;
     list: Sound[];
-  }>()
-  const [selectedNotificationSound, setSelectedNotificationSound] = useState<Sound>()
-  const [notificationDialogVisible, setNotificationDialogVisibile] = useState(false)
+  }>();
+  const [selectedNotificationSound, setSelectedNotificationSound] = useState<Sound>();
+  const [notificationDialogVisible, setNotificationDialogVisibile] = useState(false);
 
   useEffect(() => {
     getNotificationSounds()
-      .then(setNotificationData)
-  }, [])
+      .then(setNotificationData);
+  }, []);
 
   return (
     <Screen>
@@ -56,7 +55,7 @@ export const ProfilePage = observer(() => {
         <View style={{
           backgroundColor: colors.elevation.level2,
           padding: 12,
-          borderRadius: roundness * 3
+          borderRadius: roundness * 3,
         }}>
           <Text variant="bodyLarge" style={{ paddingLeft: 8 }}>Notification</Text>
           <Spacer size={8} />
@@ -66,12 +65,12 @@ export const ProfilePage = observer(() => {
             paddingRight: 12,
           }}>
             <IconButton
-              icon={"play"}
+              icon={'play'}
               style={{ backgroundColor: colors.primary }}
               iconColor={colors.onPrimary}
               onPress={() => {
                 notificationData &&
-                  playSampleSound(notificationData.current)
+                  playSampleSound(notificationData.current);
               }} />
             <View style={{ flex: 1 }}>
               <Text>{notificationData?.current.title}</Text>
@@ -82,7 +81,7 @@ export const ProfilePage = observer(() => {
             <Button
               compact
               onPress={() => {
-                setNotificationDialogVisibile(true)
+                setNotificationDialogVisibile(true);
               }}
               children="choose"
             />
@@ -97,16 +96,16 @@ export const ProfilePage = observer(() => {
                 <ScrollView>
                   {notificationData?.list.map(s =>
                     <TouchableRipple key={s.soundID} onPress={() => {
-                      playSampleSound(s)
-                      setSelectedNotificationSound(s)
+                      playSampleSound(s);
+                      setSelectedNotificationSound(s);
                     }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <RadioButton
                           status={selectedNotificationSound?.soundID === s.soundID ? 'checked' : 'unchecked'}
                           value={s.soundID}
                           onPress={() => {
-                            playSampleSound(s)
-                            setSelectedNotificationSound(s)
+                            playSampleSound(s);
+                            setSelectedNotificationSound(s);
                           }}
                         />
                         <Text>{s.title}</Text>
@@ -119,15 +118,15 @@ export const ProfilePage = observer(() => {
             <Dialog.Actions>
               <Button onPress={async () => {
                 if (selectedNotificationSound) {
-                  setNotificationSound(selectedNotificationSound)
-                  setNotificationDialogVisibile(false)
+                  setNotificationSound(selectedNotificationSound);
+                  setNotificationDialogVisibile(false);
                   await getNotificationSounds()
-                    .then(setNotificationData)
-                  return
+                    .then(setNotificationData);
+                  return;
                 }
-                ToastAndroid.show('Unkown error occurred.', ToastAndroid.SHORT)
+                ToastAndroid.show('Unkown error occurred.', ToastAndroid.SHORT);
               }}
-                mode='contained'
+                mode="contained"
                 disabled={selectedNotificationSound === undefined}
               >
                 Save
@@ -140,7 +139,7 @@ export const ProfilePage = observer(() => {
           backgroundColor: colors.elevation.level2,
           padding: 12,
           paddingLeft: 20,
-          borderRadius: roundness * 3
+          borderRadius: roundness * 3,
         }}>
           <Text variant="bodyLarge" >About App</Text>
           <Spacer size={8} />
@@ -158,7 +157,7 @@ export const ProfilePage = observer(() => {
           backgroundColor: colors.elevation.level2,
           padding: 12,
           paddingLeft: 20,
-          borderRadius: roundness * 3
+          borderRadius: roundness * 3,
         }}>
           <Text variant="bodyLarge" >Credits</Text>
           <Spacer size={8} />
@@ -168,8 +167,8 @@ export const ProfilePage = observer(() => {
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
           <Button
-            icon={"forum"}
-            onPress={() => Linking.openURL("https://chat.whatsapp.com/BJntbDAR8FuBJmQt7hE8UT")}
+            icon={'forum'}
+            onPress={() => Linking.openURL('https://chat.whatsapp.com/BJntbDAR8FuBJmQt7hE8UT')}
             children={'Send Feedback'}
           />
           {/* <Text variant="labelSmall">Join whatsapp group!</Text> */}
@@ -183,17 +182,17 @@ export const ProfilePage = observer(() => {
           children={({ handleSubmit, isSubmitting }) =>
             <View style={{ alignItems: 'center' }}>
               <Button style={{ alignSelf: 'center' }} mode="contained-tonal" disabled={isSubmitting} onPress={() => handleSubmit()}>
-                {updateAvailable ? "Update" : "check for update"}
+                {updateAvailable ? 'Update' : 'check for update'}
               </Button>
             </View>
           }
           onSubmit={async (v, { setSubmitting }) => {
-            setSubmitting(true)
-            const { updateAvailable } = await checkForUpdate()
+            setSubmitting(true);
+            const { updateAvailable } = await checkForUpdate();
             if (!updateAvailable) {
-              ToastAndroid.show("Already upto date", ToastAndroid.LONG);
+              ToastAndroid.show('Already upto date', ToastAndroid.LONG);
             }
-            setSubmitting(false)
+            setSubmitting(false);
           }}
         />
 
@@ -212,5 +211,5 @@ export const ProfilePage = observer(() => {
 
       </ScrollView>
     </Screen >
-  )
-})
+  );
+});

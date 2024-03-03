@@ -14,5 +14,7 @@ async function handlePhoneCallPermission() {
 export async function call(mobile: string) {
   if (await handlePhoneCallPermission()) {
     SendIntentAndroid.sendPhoneCall(mobile)
+
+
   }
 }

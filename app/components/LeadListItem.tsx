@@ -88,7 +88,10 @@ export const LeadListItem = observer(({ leadId }: { leadId: number }) => {
             />
           </View>
 
-          <IconButton icon={"phone"} onPress={() => call(lead.mobile)} />
+          <IconButton icon={"phone"} onPress={() => {
+            call(lead.mobile)
+            navigate('lead details', { leadId })
+          }} />
         </View>
 
         <Text style={{ textAlign: 'right', opacity: 0.6, paddingRight: 21 }}>

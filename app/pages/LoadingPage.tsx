@@ -1,13 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
-import { ToastAndroid, View } from "react-native";
+import { BackHandler, ToastAndroid, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Screen, Spacer } from "../components";
 import { useStores } from "../stores";
 import { delay } from "../utils";
-import { clearNotification, handleNotificationPermission, setNotification } from "../services";
+import { clearNotification, handleNotificationPermission, openSettings, setNotification } from "../services";
 import { appVersion } from "../stores/config";
+import { runInAction } from "mobx";
 
 
 export const LoadingPage = observer(() => {
@@ -72,7 +73,21 @@ export const LoadingPage = observer(() => {
       await handleNotificationPermission()
         .then(({ errorMessage, errorCategory }) => {
           if (errorCategory) {
-            setError('notification-permission', errorMessage + `\n\nHence, unable to set notifications.`)
+            // setError('notification-permission', errorMessage + `\n\nHence, unable to set notifications.`)
+            runInAction(() => {
+              stores.errorStore.add({
+                id: `${errorCategory}`,
+                title: `Permission Error`,
+                content: `Notification permission not found.\n\n${errorMessage}\nHence, unable to set notifications.`,
+                action: {
+                  label: 'Open settings',
+                  onPress: () => {
+                    openSettings(errorCategory)
+                    BackHandler.exitApp()
+                  }
+                }
+              })
+            })
           } else {
             hasNotificationPermission = true;
           }
@@ -130,10 +145,10 @@ export const LoadingPage = observer(() => {
           maxWidth: 400
         }}>
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'baseline' }}>
-            <Text variant='displayMedium' children={progress} />
-            <Text variant='headlineMedium' children={'%'} />
+            <Text variant="displayMedium" children={progress} />
+            <Text variant="headlineMedium" children={'%'} />
             <Spacer size={12} horizontal />
-            <Text variant='labelLarge' children="Loading..." />
+            <Text variant="labelLarge" children="Loading..." />
           </View>
         </View>
 

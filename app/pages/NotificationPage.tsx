@@ -5,10 +5,11 @@ import { Button, Input, LeadListItem, Screen, Spacer } from "../components";
 import { Lead, useStores } from "../stores";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Checkbox, IconButton, Text, TextInput, TouchableRipple, useTheme } from "react-native-paper";
-import { ButtonProps, RefreshControl, ScrollView, ToastAndroid, View } from "react-native";
+import { BackHandler, ButtonProps, RefreshControl, ScrollView, ToastAndroid, View } from "react-native";
 import { delay } from "../utils";
-import { clearNotification, handleNotificationPermission, setNotification } from '../services';
+import { clearNotification, handleNotificationPermission, openSettings, setNotification } from '../services';
 import { FilterChip } from './LeadsPage';
+import { runInAction } from 'mobx';
 
 type preFilters = 'all' | 'past' | 'upcoming'
 // const preFilters = ['all', 'past', 'upcoming']
@@ -19,35 +20,40 @@ export const NotificationPage = observer(() => {
 
   const [notificationType, setNotificationType] = useState<preFilters>('upcoming')
 
-  // const searchRef = useRef('')
   const [searchText, setSearchText] = useState('')
   const [searchQuery, setSearchQuery] = useState('');
 
   function search() {
-    // if (searchRef.current.length > 2) {
-    // setSearchQuery(searchRef.current)
-    // }
     if (searchText.length > 2) {
       setSearchQuery(searchText)
     }
   }
   function onSearchTextChange(text: string) {
-    // searchRef.current = text;
     setSearchText(text)
     if (text.length < 3) {
       setSearchQuery('')
     }
   }
+
   async function handleNotificationsRefresh() {
     let hasNotificationPermission = false;
     if (!hasNotificationPermission) {
       await handleNotificationPermission()
-        .then(({ errorMessage }) => {
+        .then(({ errorCategory, errorMessage }) => {
           if (errorMessage) {
-            errorStore.add({
-              id: `notification`,
-              title: `Permission  error`,
-              content: `Notification permission not found.\n\n${errorMessage}\nHence, unable to set notifications.`
+            runInAction(() => {
+              errorStore.add({
+                id: `${errorCategory}`,
+                title: `Permission Error`,
+                content: `Notification permission not found.\n\n${errorMessage}\nHence, unable to set notifications.`,
+                action: {
+                  label: 'Open settings',
+                  onPress: () => {
+                    openSettings(errorCategory)
+                    BackHandler.exitApp()
+                  }
+                }
+              })
             })
           } else {
             hasNotificationPermission = true;
