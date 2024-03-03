@@ -55,9 +55,9 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
 
   const leadId = props.route.params.leadId;
 
-  if (!leadId || leadId < 1) {
-    handleBack()
-  }
+  // if (!leadId || leadId < 1) {
+  //   handleBack()
+  // }
 
   const [lead, setLead] = useState<Lead | null>(leadStore.getLeadById(leadId));
   const [loading, setLoading] = useState(false);
