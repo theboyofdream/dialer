@@ -407,7 +407,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             mode="contained"
                             children={isSubmitting ? "Saving..." : "Save"}
                             // disabled={!(isValid && dirty) || isSubmitting}
-                            disabled={!isValid || isSubmitting}
+                            // disabled={!isValid || isSubmitting}
                             onPress={() => handleSubmit()}
                           />
                         </View>

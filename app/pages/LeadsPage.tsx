@@ -43,12 +43,16 @@ export function FilterChip({ active, ...props }: { active: boolean } & ChipProps
 
 
 
-
+const pageState = observable({
+  fetchingData: false,
+  activeFilterCategory: 'chips' as 'chips' | 'online search' | 'filter' | null
+})
 
 
 export const LeadsPage = observer(() => {
   const { colors, roundness } = useTheme()
-  const { leadStore, statusStore, dispositionStore, projectStore } = useStores()
+  // const { leadStore, statusStore, dispositionStore, projectStore } = useStores()
+  const { leadStore } = useStores()
 
   useEffect(() => {
     setActivePreFilter(filterState.on ? null : 'follow-ups')
@@ -77,34 +81,37 @@ export const LeadsPage = observer(() => {
   const [activePreFilter, setActivePreFilter] = useState<typeof PreDefinedFilters[number] | null>('follow-ups')
   const togglePreFilter = (name: typeof PreDefinedFilters[number]) => setActivePreFilter(activePreFilter === name ? null : name)
 
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [fetchingData, setFetchingData] = useState(false)
+  // const [fetchingData, setFetchingData] = useState(false)
   async function fetchData() {
-    setFetchingData(true)
+    runInAction(() => pageState.fetchingData = true)
+    // setFetchingData(true)
 
-    if (statusStore.statusArray.length < 1) {
-      await statusStore.fetch()
-    }
+    // if (statusStore.statusArray.length < 1) {
+    //   await statusStore.fetch()
+    // }
 
-    if (dispositionStore.dispositionArray.length < 1) {
-      await dispositionStore.fetch()
-    }
+    // if (dispositionStore.dispositionArray.length < 1) {
+    //   await dispositionStore.fetch()
+    // }
 
-    if (projectStore.projectArray.length < 1) {
-      await projectStore.fetch()
-    }
+    // if (projectStore.projectArray.length < 1) {
+    //   await projectStore.fetch()
+    // }
 
     if (activePreFilter) {
+      runInAction(() => pageState.activeFilterCategory = 'chips')
       await leadStore.fetch({ type: activePreFilter })
+    } else {
+      runInAction(() => pageState.activeFilterCategory = null)
     }
 
     await delay(500)
-    setFetchingData(false)
+    runInAction(() => pageState.fetchingData = false)
+    // setFetchingData(false)
   }
 
   useEffect(() => {
-    if (activePreFilter) fetchData()
-    else setLeads([])
+    fetchData()
   }, [activePreFilter])
 
 
@@ -121,20 +128,24 @@ export const LeadsPage = observer(() => {
       }}>
         <Text variant='titleLarge'>Leads</Text>
         <Button
+          mode='contained'
           icon="cloud-search"
-          labelStyle={[
-            { color: colors.primary },
-            fetchingData && { color: colors.onSurfaceDisabled },
-            onlineSearchState.on && { color: colors.onError }
-          ]}
+          // labelStyle={[
+          //   { color: colors.primary },
+          //   fetchingData && { color: colors.onSurfaceDisabled },
+          //   onlineSearchState.on && { color: colors.onError }
+          // ]}
           style={[
-            { backgroundColor: colors.primaryContainer },
-            fetchingData && { backgroundColor: colors.surfaceDisabled },
-            onlineSearchState.on && { backgroundColor: colors.error }
+            // { backgroundColor: colors.primaryContainer },
+            // fetchingData && { backgroundColor: colors.surfaceDisabled },
+            onlineSearchState.on && pageState.activeFilterCategory === 'online search' && { backgroundColor: colors.error }
           ]}
           onPress={() => runInAction(() => onlineSearchState.visible = true)}
-          disabled={fetchingData}
-        >Online Search</Button>
+          // disabled={fetchingData}
+          disabled={pageState.fetchingData}
+        >
+          Online Search
+        </Button>
       </View>
 
 
@@ -201,8 +212,10 @@ export const LeadsPage = observer(() => {
               <FilterChip
                 key={item}
                 children={item}
-                active={activePreFilter === item}
-                disabled={onlineSearchState.on || fetchingData || filterState.on}
+                active={activePreFilter === item && pageState.activeFilterCategory === 'chips'}
+                // disabled={onlineSearchState.on || fetchingData || filterState.on}
+                // disabled={fetchingData}
+                disabled={pageState.fetchingData}
                 onPress={() => togglePreFilter(item)}
               />
             )
@@ -212,25 +225,29 @@ export const LeadsPage = observer(() => {
       </View>
 
       {
-        fetchingData &&
+        // fetchingData &&
+        pageState.fetchingData &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant="titleMedium">Fetching Data...</Text>
         </View>
       }
       {
-        !fetchingData && leadStore.leads.length < 1 &&
+        // !fetchingData && leadStore.leads.length < 1 &&
+        !pageState.fetchingData && leadStore.leads.length < 1 &&
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text variant='titleMedium'>No data found!</Text>
           <Button onPress={fetchData} icon="refresh">refresh</Button>
         </View>
       }
       {
-        !fetchingData && leadStore.leads.length > 0 &&
+        // !fetchingData && leadStore.leads.length > 0 &&
+        !pageState.fetchingData && leadStore.leads.length > 0 &&
         <View style={{ flex: 1 }}>
           <ScrollView
             refreshControl={
               <RefreshControl
-                refreshing={fetchingData}
+                // refreshing={fetchingData}
+                refreshing={pageState.fetchingData}
                 onRefresh={fetchData}
               />
             }
@@ -264,13 +281,14 @@ export const LeadsPage = observer(() => {
       <Button
         style={[
           { position: 'absolute', right: 0, bottom: 0, margin: 12 },
-          filterState.on && { backgroundColor: colors.error }
+          filterState.on && pageState.activeFilterCategory === 'filter' && { backgroundColor: colors.error }
         ]}
         mode='contained'
-        icon={filterState.on ? "filter-remove" : "filter"}
-        children={filterState.on ? "clear" : "filter"}
+        icon={filterState.on && pageState.activeFilterCategory === 'filter' ? "filter-remove" : "filter"}
+        children={filterState.on && pageState.activeFilterCategory === 'filter' ? "clear" : "filter"}
         onPress={() => runInAction(() => filterState.visible = true)}
-        disabled={fetchingData}
+        // disabled={fetchingData}
+        disabled={pageState.fetchingData}
       />
       <FilterPopup />
       <OnlineSearchPopup />
@@ -308,7 +326,7 @@ const filterState = observable({
 const filterSchema = yup.object().shape({
   startDate: yup.date().required('Start date is required'),
   endDate: yup.date().required('End date is required'),
-  statusId: yup.number().min(1, 'Select status').required('Status is required'),
+  statusId: yup.number(),//.min(1, 'Select status').required('Status is required'),
   dispositionIds: yup.array(yup.number()),
   // dispositionIds: yup.array(yup.number()).min(1, 'Select atleast one disposition').required('Disposition is required'),
 })
@@ -395,11 +413,16 @@ const FilterPopup = observer(() => {
 
                   <Dropdown
                     multiSelect
-                    data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
+                    // data={dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId)}
+                    data={
+                      values.statusId > 0 ?
+                        dispositionStore.dispositionArray.filter(d => d.statusId === values.statusId) :
+                        dispositionStore.dispositionArray
+                    }
                     initialValue={values.dispositionIds}
                     refresh={dispositionStore.fetch}
                     placeholder='Disposition'
-                    disabled={values.statusId < 1}
+                    // disabled={values.statusId < 1}
                     onHide={(v) => {
                       setFieldValue('dispositionIds', v)
                       handleBlur('dispositionIds')
@@ -431,32 +454,37 @@ const FilterPopup = observer(() => {
               onSubmit={async ({ startDate, endDate, statusId, dispositionIds }, { setSubmitting }) => {
                 setSubmitting(true)
 
-                await leadStore.applyFilters({
+                let { error, message } = await leadStore.applyFilters({
                   fromDate: startDate,
                   toDate: endDate,
                   statusId,
                   dispositionIds
                 })
-                  .then(({ error, message }) => {
-                    error &&
-                      runInAction(() =>
-                        errorStore.add({
-                          id: `apply-filter`,
-                          title: `Error`,
-                          content: `Error occurred while aplying filters. Try again.\n\nerror message:\n${message}`
-                        })
-                      )
-                    runInAction(() => filterState.on = !error)
-                  })
 
                 runInAction(() => {
+                  filterState.on = true
+                  pageState.activeFilterCategory = 'filter'
                   filterState.statusId = statusId
                   filterState.dispositionIds = dispositionIds
                   filterState.startDate = startDate
                   filterState.endDate = endDate
                 })
 
+                // console.log({ error, message })
                 setSubmitting(false)
+
+                if (error) {
+                  runInAction(() => {
+                    errorStore.add({
+                      id: `apply-filter`,
+                      title: `Error`,
+                      content: `Error occurred while aplying filters. Try again.\n\nerror message:\n${message}`
+                    })
+                    filterState.on = false
+                    pageState.activeFilterCategory = null
+                  })
+                }
+
                 setTimeout(hideDialog, 500)
               }}
               onReset={() => {
@@ -467,6 +495,7 @@ const FilterPopup = observer(() => {
                   filterState.endDate = new Date()
                   filterState.on = false
                   filterState.visible = false
+                  pageState.activeFilterCategory = null
                 })
               }}
             />
@@ -591,24 +620,31 @@ const OnlineSearchPopup = observer(() => {
             )}
             onSubmit={async ({ name, mobile }, { setSubmitting }) => {
               setSubmitting(true)
-              await leadStore.searchLeads(name, mobile)
-                .then(({ error, message }) => {
-                  if (error) {
-                    runInAction(() => {
-                      errorStore.add({
-                        id: `search-lead`,
-                        title: `Error`,
-                        content: `Unable to find lead. Try again.\n\nerror message:\n${message}`
-                      });
-                    })
-                  }
-                  runInAction(() => {
-                    onlineSearchState.on = true
-                    onlineSearchState.visible = false
-                    onlineSearchState.name = name
-                    onlineSearchState.mobile = mobile
-                  })
+
+              runInAction(() => {
+                onlineSearchState.name = name
+                onlineSearchState.mobile = mobile
+              })
+
+              let { error, message } = await leadStore.searchLeads(name, mobile)
+
+              if (error) {
+                runInAction(() => {
+                  errorStore.add({
+                    id: `search-lead`,
+                    title: `Error`,
+                    content: `Unable to find lead. Try again.\n\nerror message:\n${message}`
+                  });
                 })
+                onlineSearchState.on = false
+              } else {
+                runInAction(() => {
+                  onlineSearchState.on = true
+                  onlineSearchState.visible = false
+                  pageState.activeFilterCategory = 'online search'
+                })
+              }
+
               setSubmitting(false)
             }}
             onReset={() => {
@@ -617,6 +653,7 @@ const OnlineSearchPopup = observer(() => {
                 onlineSearchState.on = false
                 onlineSearchState.name = ''
                 onlineSearchState.mobile = ''
+                pageState.activeFilterCategory = null
               })
             }}
           />

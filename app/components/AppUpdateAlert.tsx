@@ -32,7 +32,8 @@ export const AppUpdateAlert = observer(() => {
   const { colors } = useTheme()
   const store = useStores().appInfoStore;
 
-  const [visible, setVisibility] = useState(store.updateAvailable)
+  const visible = store.updateAvailable;
+  // const [visible, setVisibility] = useState(store.updateAvailable)
 
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [updating, setUpdating] = useState(false)
@@ -89,7 +90,7 @@ export const AppUpdateAlert = observer(() => {
           }
         </Dialog.Content>
         <Dialog.Actions>
-          <Button disabled={updating} onPress={() => setVisibility(false)}>skip</Button>
+          {/* <Button disabled={updating} onPress={() => setVisibility(false)}>skip</Button> */}
           <Button
             mode="contained"
             disabled={updating}

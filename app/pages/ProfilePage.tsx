@@ -161,7 +161,14 @@ export const ProfilePage = observer(() => {
         }}>
           <Text variant="bodyLarge" >Credits</Text>
           <Spacer size={8} />
-          <Text>Work on Progress!</Text>
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={{ flex: 1 }}>API development</Text>
+            <Text style={{ flex: 1 }}>Jaiprakash yadav</Text>
+          </View>
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={{ flex: 1 }}>APP development</Text>
+            <Text style={{ flex: 1 }}>Abhishek Chaurasiya</Text>
+          </View>
         </View>
 
 
