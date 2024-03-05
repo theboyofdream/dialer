@@ -121,7 +121,11 @@ export const InAppNotificationAlert = observer(() => {
             icon='phone'
             mode='contained'
             style={{ backgroundColor: 'transparent' }}
-            onPress={() => call(lead.mobile)}
+            onPress={() => {
+              call(lead.mobile)
+              navigate('lead details', { leadId: lead.id })
+              setVisibility(false)
+            }}
           />
           <Spacer size={0} stretch />
           <Button
@@ -130,7 +134,10 @@ export const InAppNotificationAlert = observer(() => {
           />
           <Button
             mode="contained"
-            onPress={() => navigate('lead details', { leadId: lead.id })}
+            onPress={() => {
+              setVisibility(false)
+              navigate('lead details', { leadId: lead.id })
+            }}
             children="open"
           />
         </Dialog.Actions>

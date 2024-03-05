@@ -94,7 +94,7 @@ export const AppUpdateAlert = observer(() => {
           <Button
             mode="contained"
             disabled={updating}
-            onPress={update}
+            onPress={() => { update() }}
             children={updating ? 'downloading...' : 'update'}
           />
         </Dialog.Actions>

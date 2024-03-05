@@ -152,6 +152,12 @@ export async function removeNotification(notificationId: string) {
 }
 
 export async function clearNotification() {
+  // await notifee.getDisplayedNotifications()
+  //   .then(displayNotifications => {
+  //     displayNotifications.map(n => {
+
+  //     })
+  //   })
   await notifee.cancelAllNotifications();
 }
 

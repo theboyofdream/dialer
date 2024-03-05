@@ -93,7 +93,7 @@ export const LoadingPage = observer(() => {
           }
         })
     }
-    hasNotificationPermission && await clearNotification()
+    // hasNotificationPermission && await clearNotification()
     for (let notification of stores.notificationStore.upcomingNotifications) {
       if (!hasNotificationPermission) { break }
       if (

@@ -7,12 +7,12 @@ export const
 
   baseUri = "https://sahikarma.com/api/dialer/v2",
   timeout = 12000,
-  appVersion = 1.031,
+  appVersion = 1.33,
 
   appInfo = {
     appVersion,
-    'react native': 0.71,
-    hermes: 'enabled'
+    // 'react native': 0.71,
+    // hermes: 'enabled'
   };
 
 export const axiosInterceptor = axios.create({

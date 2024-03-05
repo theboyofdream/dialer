@@ -153,7 +153,7 @@ export const ProfilePage = observer(() => {
           </View>
         </View>
 
-        <View style={{
+        {/* <View style={{
           backgroundColor: colors.elevation.level2,
           padding: 12,
           paddingLeft: 20,
@@ -169,7 +169,7 @@ export const ProfilePage = observer(() => {
             <Text style={{ flex: 1 }}>APP development</Text>
             <Text style={{ flex: 1 }}>Abhishek Chaurasiya</Text>
           </View>
-        </View>
+        </View> */}
 
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>

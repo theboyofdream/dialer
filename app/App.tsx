@@ -30,6 +30,11 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
     if (notification && notification.data) {
       Linking.openURL(`dhwajdialer://lead/${notification.data.leadId}`)
+        .then(onfulfilled => {
+          if (notification.id) {
+            removeNotification(notification.id)
+          }
+        })
     }
   }
 });
@@ -41,19 +46,19 @@ export default function App() {
 
     const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
       const { notification } = detail
-      switch (type) {
-        case EventType.PRESS:
-        case EventType.ACTION_PRESS:
-          if (notification && notification.id && notification.data) {
-            Linking.openURL(`dhwajdialer://lead/${notification.data.leadId}`)
-            removeNotification(notification.id)
-          }
-          break;
+      if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+        if (notification && notification.data) {
+          Linking.openURL(`dhwajdialer://lead/${notification.data.leadId}`)
+            .then(onfulfilled => {
+              if (notification.id) {
+                removeNotification(notification.id)
+              }
+            })
+        }
       }
     });
 
-    return unsubscribe();
-
+    return () => { unsubscribe() };
   }, []);
 
   return (
