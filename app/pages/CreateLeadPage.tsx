@@ -1,6 +1,6 @@
 import { Formik } from "formik";
 import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, ToastAndroid, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Button, Dropdown, Input, Screen, Spacer } from "../components";
 
@@ -125,6 +125,7 @@ export const CreateLeadPage = observer(() => {
               /> */}
 
                 <Dropdown
+                  enableSearch
                   multiSelect
                   data={projectStore.projectArray}
                   initialValue={[]}
@@ -177,11 +178,11 @@ export const CreateLeadPage = observer(() => {
             </View>
           )
         }}
-        onSubmit={async (form, { setSubmitting }) => {
+        onSubmit={async (form, { setSubmitting, resetForm }) => {
           setSubmitting(true);
           await leadStore.createLead(form)
             .then(({ error, message }) => {
-              error &&
+              if (error) {
                 runInAction(() =>
                   errorStore.add({
                     id: `create-lead`,
@@ -189,6 +190,10 @@ export const CreateLeadPage = observer(() => {
                     content: `Something went wrong. Try again.\n\nerror message:\n${message}`
                   })
                 )
+              } else {
+                ToastAndroid.show('Lead created successfully', ToastAndroid.LONG);
+                resetForm();
+              }
             })
           setSubmitting(false);
         }}

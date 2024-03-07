@@ -59,7 +59,7 @@ export const Input = ({ errorText, label, hideLabel, ...props }: InputProps) => 
 
       {isError && errorText &&
         <Text
-          style={{ color: colors.error }}
+          style={[{ color: colors.error }, props.disabled && { opacity: 0.6 }]}
           children={errorText}
         />
       }

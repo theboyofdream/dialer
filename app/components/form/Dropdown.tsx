@@ -190,7 +190,7 @@ export const Dropdown = observer(({ multiSelect, data, refresh, onHide, initialV
           editable={false}
           multiline={multiSelect}
           value={inputValues}
-          right={<TextInput.Icon icon={"chevron-down"} onPress={showDialog} />}
+          right={<TextInput.Icon icon={"chevron-down"} onPress={showDialog} disabled={props.disabled} />}
           {...props}
         />
       </Pressable>

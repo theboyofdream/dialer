@@ -23,7 +23,8 @@ function DisabledText({ text }: { text: string }) {
 
 const schema = yup.object().shape({
   id: yup.number().min(1, 'Lead ID is required').required('Lead ID is required'),
-  franchiseId: yup.number().min(1, 'Franchise ID is required').required('Franchise ID is required'),
+  // franchiseId: yup.number().min(1, 'Franchise ID is required').required('Franchise ID is required'),
+  franchiseId: yup.number(),
   firstname: yup.string().required('Firstname is required'),
   lastname: yup.string().required('Lastname is required'),
   mobile: yup.string().matches(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit mobile number').required("Mobile number is required"),
@@ -93,6 +94,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
     setLoading(false)
   }
   useEffect(() => {
+    console.log(lead?.franchiseId)
     !lead && fetchData()
   }, [lead])
 
@@ -176,7 +178,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                   validateOnMount={true}
                   // children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting, dirty, touched }) => (
                   children={({ handleBlur, handleChange, setFieldValue, handleSubmit, errors, values, isValid, isSubmitting }) => {
-                    // console.log({ isValid, errors, values })
+                    console.log({ isValid, errors, values })
 
                     return (<View style={{ flex: 1, }}>
                       <ScrollView showsVerticalScrollIndicator={false}>
@@ -407,7 +409,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             mode="contained"
                             children={isSubmitting ? "Saving..." : "Save"}
                             // disabled={!(isValid && dirty) || isSubmitting}
-                            // disabled={!isValid || isSubmitting}
+                            disabled={!isValid || isSubmitting}
                             onPress={() => handleSubmit()}
                           />
                         </View>
@@ -485,8 +487,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 24
   },
   form: {
-    minWidth: 350,
-    maxWidth: 400,
+    minWidth: 300,
+    maxWidth: 350,
     gap: 8,
   },
   submitBtn: {

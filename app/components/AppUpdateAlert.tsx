@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Linking, View, NativeModules, PermissionsAndroid } from "react-native";
 import * as RNFS from 'react-native-fs';
 import { Dialog, Portal, Text, useTheme } from "react-native-paper";
-import { Button } from ".";
+import { Button, Spacer } from ".";
 import { useStores } from "../stores";
 import SendIntentAndroid from "react-native-send-intent";
 
@@ -39,7 +39,7 @@ export const AppUpdateAlert = observer(() => {
   const [updating, setUpdating] = useState(false)
   async function update() {
     setUpdating(true)
-    let filePath = RNFS.DownloadDirectoryPath + `/com.dialer.apk`;
+    let filePath = RNFS.CachesDirectoryPath + `/com.dialer.apk`;
     let download = RNFS.downloadFile({
       fromUrl: store.appInfo.uri,
       toFile: filePath,
@@ -49,7 +49,7 @@ export const AppUpdateAlert = observer(() => {
       },
       progressDivider: 1
     });
-    download.promise.then(result => {
+    await download.promise.then(result => {
       if (result.statusCode == 200) {
         SendIntentAndroid.openFileChooser(
           {
@@ -81,12 +81,15 @@ export const AppUpdateAlert = observer(() => {
           <Text style={{ color: 'blue', textDecorationLine: 'underline' }} onPress={openUpdateLinkInBrowser}>{'\n'}Download from browser!</Text>
           {
             updating &&
-            <View style={{ gap: 8, alignItems: 'center' }}>
-              <Text variant="labelLarge">Downloading {downloadProgress}%</Text>
-              <View style={{ width: '100%', height: 3, borderRadius: 3, backgroundColor: colors.surfaceDisabled }}>
-                <View style={{ width: `${downloadProgress}%`, height: 3, borderRadius: 3, backgroundColor: colors.onSurfaceVariant }} />
+            <>
+              <Spacer size={20} />
+              <View style={{ gap: 8, alignItems: 'center' }}>
+                <Text variant="labelLarge">Downloading {downloadProgress}%</Text>
+                <View style={{ width: '100%', height: 3, borderRadius: 3, backgroundColor: colors.surfaceDisabled }}>
+                  <View style={{ width: `${downloadProgress}%`, height: 3, borderRadius: 3, backgroundColor: colors.onSurfaceVariant }} />
+                </View>
               </View>
-            </View>
+            </>
           }
         </Dialog.Content>
         <Dialog.Actions>
