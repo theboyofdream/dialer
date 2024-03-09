@@ -103,10 +103,16 @@ export const LeadListItem = observer(({ leadId }: { leadId: number }) => {
             style={{ color: colors.onSurfaceDisabled }}
             children=" • "
           />
-          <Text
-            variant='bodySmall'
-            children={lead.followUpDate ? dateFns.toHumanReadleDate(lead.followUpDate) : <DisabledText text='No Follow Up' />}
-          />
+          {(typeof lead.followUpDate === 'object') ?
+            <Text variant="bodySmall">{dateFns.toHumanReadleDate(lead.followUpDate)}</Text> :
+            <DisabledText text='No Follow Up' />
+          }
+
+          {/* // <Text
+          //   variant='bodySmall'
+          //   children={lead.followUpDate ? dateFns.toHumanReadleDate(lead.followUpDate) : <DisabledText text='No Follow Up' />}
+          // /> */}
+
         </Text>
       </View>
     </TouchableRipple>

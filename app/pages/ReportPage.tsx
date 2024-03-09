@@ -10,6 +10,7 @@ import * as yup from 'yup'
 import { dateFns } from "../utils";
 import { getDispositionWiseCallReport, useStores } from "../stores";
 import { observer } from "mobx-react-lite";
+import { observable } from "mobx";
 
 
 type DispositionWiseCalls = {
@@ -134,25 +135,33 @@ export const ReportPage = observer(() => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12 }}
+        contentContainerStyle={{ gap: 12, marginHorizontal: 24 }}
       >
         {dispositionWiseCallReport &&
           Object.keys(dispositionWiseCallReport).map((k, i) =>
             <View key={i}>
-              <Text>
-                <Text>{k}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                <Text variant='bodyLarge'>{k}</Text>
                 <Text style={{ color: colors.onSurfaceDisabled }}> • </Text>
-                <Text>{dispositionWiseCallReport[k as keyof DispositionWiseCalls]}</Text>
-              </Text>
-              <View style={{ flexDirection: 'row' }}>
+                <Text variant='bodyLarge'>{dispositionWiseCallReport[k as keyof DispositionWiseCalls]}</Text>
+                {/* <Text>dispos</Text> */}
+              </View>
+              <View style={{
+                flexDirection: 'row',
+                backgroundColor: colors.elevation.level3,
+                borderRadius: roundness * 1.5,
+                width: '100%',
+                overflow: 'hidden'
+              }}>
                 <View style={{
                   backgroundColor: colors.primary,
                   // paddingVertical: 20,
                   // padding: 1,
-                  borderRadius: roundness,
+                  borderRadius: roundness * 1.5,
                   width: `${Math.round((dispositionWiseCallReport[k as keyof DispositionWiseCalls] / maxCount) * 100) || 0}%`,
-                  height: roundness * 5,
-                  minWidth: 1
+                  // width: `${Math.round(Math.random() * 100)}%`,
+                  height: roundness * 8,
+                  // minWidth: 1
                 }}
                 />
               </View>

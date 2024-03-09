@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, IconButton, Text, TextInput, useTheme } from "react-native-paper";
-import { DatePickerModal } from "react-native-paper-dates";
+import { DatePickerModal, TimePicker, TimePickerModal } from "react-native-paper-dates";
 import * as yup from 'yup';
 import { StackNavigatorParams } from "../Navigation";
 import { Button, Dropdown, Input, Screen, Spacer } from "../components";
@@ -82,10 +82,8 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
     return { dispositionName, statusName, statusColor, projectName }
   }, [lead])
 
-  const [open, setOpen] = useState(false);
-  const onDismiss = useCallback(() => {
-    setOpen(false);
-  }, [setOpen]);
+  const [isDateTimePickerOpen, setDateTimePickerOpen] = useState<'date' | 'time' | null>(null);
+  const onDismiss = () => setDateTimePickerOpen(null);
 
   async function fetchData() {
     setLoading(true)
@@ -317,18 +315,34 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                             <DatePickerModal
                               locale="en"
                               mode="single"
-                              visible={open}
+                              visible={isDateTimePickerOpen === 'date'}
                               onDismiss={onDismiss}
                               date={values.followUpDate}
                               onConfirm={({ date }) => {
                                 setFieldValue('followUpDate', date)
                                 handleChange('followUpDate')
                                 handleBlur('followUpDate')
-                                setOpen(false)
+                                setDateTimePickerOpen('time')
+                              }}
+                            />
+                            <TimePickerModal
+                              visible={isDateTimePickerOpen === 'time'}
+                              onDismiss={onDismiss}
+                              onConfirm={({ hours, minutes }) => {
+                                let date = values.followUpDate;
+                                if (date) {
+                                  date.setHours(hours)
+                                  date.setMinutes(minutes)
+                                }
+                                setFieldValue('followUpDate', date)
+                                handleChange('followUpDate')
+                                handleBlur('followUpDate')
+                                setDateTimePickerOpen(null)
                               }}
                             />
 
-                            <Pressable onPress={() => setOpen(true)}>
+
+                            <Pressable onPress={() => setDateTimePickerOpen('date')}>
                               <Input
                                 label="Select Follow-up Date"
                                 value={values.followUpDate ? `${dateFns.toReadable(values.followUpDate, "datetime")}` : ''}
@@ -337,7 +351,7 @@ export const LeadDetailPage = observer((props: LeadDetailsPageProps) => {
                                 right={
                                   <TextInput.Icon
                                     icon={"calendar-month"}
-                                    onPress={() => setOpen(true)}
+                                    onPress={() => setDateTimePickerOpen('date')}
                                   />
                                 }
                                 required

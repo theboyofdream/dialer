@@ -2,14 +2,20 @@
 export const dateFns = {
   format: (date: Date, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en', options).format(date),
   toHumanReadleDate: (date: Date) => {
-    return dateFns.format(date, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
+    let readableDate;
+    try {
+      readableDate = dateFns.format(date, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (error) {
+      readableDate = `${error}`;
+    }
+    return readableDate;
   },
   toReadable: (date: Date, type: 'date' | 'time' | 'datetime' = 'datetime') => {
     let options = {} as Intl.DateTimeFormatOptions
@@ -84,6 +90,9 @@ export const dateFns = {
     shortName: dateFns.format(date, { month: 'short' }),
     longName: dateFns.format(date, { month: 'long' })
   }),
+
+  //
+  addWeek: (date: Date, amount: number) => new Date(date.getTime() + (amount * 7 * 24 * 60 * 1000)),
   /**
    * Compares 2 dates (i.e. date1 from date2) based on month & year.
    * 
